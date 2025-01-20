@@ -1,16 +1,22 @@
-package bgu.spl.net.impl.stomp;
+package bgu.spl.net.srv;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-import bgu.spl.net.srv.ConnectionHandler;
-import bgu.spl.net.srv.Connections;
-
 public class ConnectionsImpl<T> implements Connections<T> {
 
+
     private final ConcurrentHashMap<Integer, ConnectionHandler<T>> activeConnections;
-    
     private final ConcurrentHashMap<String, List<Integer>> channelSubscriptions;
+
+
+    private static class connectionsImplHolder {
+        private static final ConnectionsImpl instance = new ConnectionsImpl<>();
+    }
+
+    public static ConnectionsImpl getInstance() {
+        return connectionsImplHolder.instance;
+    }
 
     public ConnectionsImpl() {
         this.activeConnections = new ConcurrentHashMap<>();
