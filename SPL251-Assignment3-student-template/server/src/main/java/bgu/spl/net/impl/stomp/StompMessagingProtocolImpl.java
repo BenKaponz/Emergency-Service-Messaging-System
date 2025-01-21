@@ -51,32 +51,32 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private void handleConnect(Frame frame){
 
         // Extract required headers
-        String version = frame.getHeaders().get("accept-version");
-        String host = frame.getHeaders().get("host");
-        String login = frame.getHeaders().get("login");
-        String passcode = frame.getHeaders().get("passcode");
+        String version = splitHeaderValue(frame.getHeaders().get(0));
+        String hostName = splitHeaderValue(frame.getHeaders().get(1));
+        String userName = splitHeaderValue(frame.getHeaders().get(2));
+        String password = splitHeaderValue(frame.getHeaders().get(3));
 
         // Validate headers
-    if (version == null || !version.equals("1.2")) {
-        sendErrorFrame("Unsupported STOMP version. Expected version 1.2.");
-        return;
-    }
+    // if (version == null || !version.equals("1.2")) {
+    //     sendErrorFrame("Unsupported STOMP version. Expected version 1.2.");
+    //     return;
+    // }
 
-    if (host == null || !host.equals("stomp.cs.bgu.ac.il")) {
+    if (hostName == null || !hostName.equals("stomp.cs.bgu.ac.il")) {
         sendErrorFrame("Invalid host. Expected stomp.cs.bgu.ac.il.");
         return;
     }
-
-    if (login == null || passcode == null) {
+    
+    if (userName == null || password == null) {
         sendErrorFrame("Missing login or passcode.");
         return;
     }
 
     // Validate user credentials (example logic)
-    User user = connections.getUser(login); // Fetch the user object
+    User user = connections.getUser(userName); // Fetch the user object
     if (user == null) {
         // New user, create and store it
-        user = new User(login, passcode);
+        user = new User(userName, password);
         connections.addUser(user);
     } else {
         // Existing user, check credentials
@@ -94,7 +94,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     // Mark user as connected
     user.connect(frame.getConnectionID(), frame.getConnectionHandler());
-    connections.
 
     // Send CONNECTED frame
     String connectedFrame = "CONNECTED\nversion:1.2\n\n\u0000";
@@ -106,5 +105,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     public void sendErrorFrame(String msg) {
         connections.send(connectionId, msg);
         connections.disconnect(connectionId);
+        shouldTerminate = true;
+    }
+
+    public String splitHeaderValue(String header) {
+        String[] headerParts = header.split(":");
+        return headerParts[1];
     }
 }
