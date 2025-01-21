@@ -20,7 +20,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     @Override
     public void process(String message) {
-        Frame frame = new Frame(message, connectionId, null); //user.getConnectionHandler()
+        Frame frame = new Frame(message); 
 
         switch (frame.getCommand()) {
             case "CONNECT":
