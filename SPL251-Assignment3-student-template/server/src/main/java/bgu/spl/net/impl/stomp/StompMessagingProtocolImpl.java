@@ -47,5 +47,16 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     public boolean shouldTerminate() {
         return shouldTerminate;
     }
+
+    private void handleConnect(Frame frame){
+
+        // Extract required headers
+        String version = frame.getHeaders().get("accept-version");
+        String host = frame.getHeaders().get("host");
+        String login = frame.getHeaders().get("login");
+        String passcode = frame.getHeaders().get("passcode");
+
+        
+    }
     
 }
