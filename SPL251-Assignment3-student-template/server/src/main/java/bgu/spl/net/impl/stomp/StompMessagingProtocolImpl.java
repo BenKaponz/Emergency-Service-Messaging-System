@@ -22,10 +22,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     @Override
     public void process(String message) {
-        Frame frame = new Frame(message); 
+        // Spliting msg
+        String[] msgLines = message.split("\n");
+        String command = msgLines[0];
 
-        if (frame.getCommand().equals("CONNECT")) {
-            handleConnect(frame);
+        if (command.equals("CONNECT")) {
+            handleConnect(msgLines);
             return;
         }
         if (currentUser == null) {
@@ -33,21 +35,21 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             return;
         }
 
-        switch (frame.getCommand()) {
+        switch (command) {
             case "SEND":
-                handleSend(frame);
+                handleSend(msgLines);
                 break;
             case "SUBSCRIBE":
-                handleSubscribe(frame);
+                handleSubscribe(msgLines);
                 break;
             case "UNSUBSCRIBE":
-                handleUnsubscribe(frame);
+                handleUnsubscribe(msgLines);
                 break;
             case "DISCONNECT":
-                handleDisconnect(frame);
+                handleDisconnect(msgLines);
                 break;
             default:
-                sendErrorFrame("Invalid command: " + frame.getCommand());
+                sendErrorFrame("Invalid command: " + command);
         }
     }
 
@@ -56,12 +58,14 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         return shouldTerminate;
     }
 
-    /************************************ CONNECT **************************************/
-    private void handleConnect(Frame frame) {
+    /************************************
+     * CONNECT
+     **************************************/
+    private void handleConnect(String[] msgLines) {
 
         // Extract required headers
-        String userName = splitHeaderValue(frame.getHeaders().get(2));
-        String password = splitHeaderValue(frame.getHeaders().get(3));
+        String userName = splitHeaderValue(msgLines[3]);
+        String password = splitHeaderValue(msgLines[4]);
 
         if (currentUser != null) {
             sendErrorFrame("The client is already logged in, log out before trying again.");
@@ -85,50 +89,75 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
         user.setConnected(true);
         user.setConnectionId(connectionId);
-        
-        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\u0000");//ẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞ
+
+        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\u0000");// ẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞ
     }
 
-    /************************************ DISCONNECT **************************************/
-    private void handleDisconnect (Frame frame) {
+    /************************************
+     * DISCONNECT
+     **************************************/
+    private void handleDisconnect(String[] msgLines) {
 
         // Extract required header and send rececipt.
-        String receiptID = splitHeaderValue(frame.getHeaders().get(0));
+        String receiptID = splitHeaderValue(msgLines[1]);
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
-        
+
         connections.disconnect(connectionId);
     }
 
-    /************************************ SUBSCRIBE ***************************************/
-    private void handleSubscribe (Frame frame) {
-        String destination = splitHeaderValue(frame.getHeaders().get(0));
-        String subscriptionID = splitHeaderValue(frame.getHeaders().get(1));
-        String receiptID = splitHeaderValue(frame.getHeaders().get(2));
+    /************************************
+     * SUBSCRIBE
+     ***************************************/
+    private void handleSubscribe(String[] msgLines) {
+        String destination = splitHeaderValue(msgLines[1]);
+        String subscriptionID = splitHeaderValue(msgLines[2]);
+        String receiptID = splitHeaderValue(msgLines[3]);
 
         currentUser.addSub(destination, subscriptionID);
         connections.subscribe(destination, connectionId);
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID +  "\n\n" + "\\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
     }
 
-    /************************************ UNSUBSCRIBE ***************************************/
-    private void handleUnsubscribe(Frame frame) {
-        String subscriptionID = splitHeaderValue(frame.getHeaders().get(0));
-        String receiptID = splitHeaderValue(frame.getHeaders().get(1));
+    /************************************
+     * UNSUBSCRIBE
+     ***************************************/
+    private void handleUnsubscribe(String[] msgLines) {
+        String subscriptionID = splitHeaderValue(msgLines[1]);
+        String receiptID = splitHeaderValue(msgLines[2]);
 
         String channel = currentUser.removeSub(subscriptionID);
         connections.unsubscribe(channel, connectionId);
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID +  "\n\n" + "\\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
     }
 
-    /************************************ SEND ***************************************/
-    private void handleSend(Frame frame) {
-
+    /************************************
+     * SEND
+     ***************************************/
+    private void handleSend(String[] msgLines) {
+        String destination = splitHeaderValue(msgLines[1]);
+        String body = getBodyMessage(msgLines);
+        String msg = "MESSAGE\ndestination:" + destination + "\n\n" + body + "\n" + "\\u0000";
+        connections.send(destination, msg);
     }
-
+    
     public void sendErrorFrame(String msg) {
         connections.send(connectionId, msg);
         connections.disconnect(connectionId);
         shouldTerminate = true;
+    }
+
+    private String getBodyMessage(String[] msgLines) {
+        String body = "";
+        int index = 0;
+        while (!msgLines[index].equals("")) {
+            index++;
+        }
+        index++;
+        while (index < msgLines.length) {
+            body = body + msgLines[index] + "\n";
+        }
+
+        return body;
     }
 
     public String splitHeaderValue(String header) {
