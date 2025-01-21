@@ -36,11 +36,15 @@ public class User {
     }
 
     public void addSub(String channel, String subscriptionID) {
-        this.subscribeIdToChannels.put(subscriptionID, channel);
+        this.subscribeIdToChannels.put(channel, subscriptionID);
     }
 
     public String removeSub(String subscriptionID){
         return this.subscribeIdToChannels.remove(subscriptionID);
+    }
+
+    public String getSubscriptionID (String channel) {
+        return subscribeIdToChannels.get(channel);
     }
 
     // SETTERS
