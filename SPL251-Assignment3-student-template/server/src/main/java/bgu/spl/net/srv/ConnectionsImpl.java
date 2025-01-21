@@ -53,6 +53,10 @@ public class ConnectionsImpl<T> implements Connections<T> {
         }
     }
 
+    public void connect(int connectionId, ConnectionHandler<T> handler) {
+        activeConnections.put(connectionId, handler);
+    }
+
     public User getUser(String userName) {
         return allUsers.get(userName);
     }

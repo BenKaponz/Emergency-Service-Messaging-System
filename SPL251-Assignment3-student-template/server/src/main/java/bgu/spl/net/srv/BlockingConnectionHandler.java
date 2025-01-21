@@ -21,12 +21,13 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     private int connectionID;
     private final ConnectionsImpl<T> connectionsImpl;
 
+    @SuppressWarnings("unchecked")
     public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, MessagingProtocol<T> protocol, int connectionID) {
         this.sock = sock;
         this.encdec = reader;
         this.protocol = protocol;
-        this.connectionID = connectionID;
-        this.connectionsImpl = ConnectionsImpl.getInstance();
+        this.connectionID = connectionID; // ADDED
+        this.connectionsImpl = ConnectionsImpl.getInstance(); // ADDED
     }
 
     @Override
@@ -37,6 +38,7 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
             in = new BufferedInputStream(sock.getInputStream());
             out = new BufferedOutputStream(sock.getOutputStream());
 
+            connectionsImpl.connect(connectionID, this);  // *****************************
             protocol.start(connectionID, connectionsImpl); // ****************************
 
             while (!protocol.shouldTerminate() && connected && (read = in.read()) >= 0) {
@@ -65,13 +67,5 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     @Override
     public void send(T msg) {
         //IMPLEMENT IF NEEDED
-        // try {
-        //     if (msg != null) {
-        //         out.write(encdec.encode(msg));
-        //         out.flush();
-        //     }
-        // } catch (IOException e) {
-        //     e.printStackTrace();
-        // }
     }
 }
