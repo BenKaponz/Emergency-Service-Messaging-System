@@ -24,20 +24,26 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     public void process(String message) {
         Frame frame = new Frame(message); 
 
+        if (frame.getCommand().equals("CONNECT")) {
+            handleConnect(frame);
+            return;
+        }
+        if (currentUser == null) {
+            sendErrorFrame("Cannot preform the action because user is not connected");
+            return;
+        }
+
         switch (frame.getCommand()) {
-            case "CONNECT":
-                handleConnect(frame);
-                break;
-            case "SEND";
+            case "SEND":
                 handleSend(frame);
                 break;
-            case "SUBSCRIBE";
+            case "SUBSCRIBE":
                 handleSubscribe(frame);
                 break;
-            case "UNSUBSCRIBE";
+            case "UNSUBSCRIBE":
                 handleUnsubscribe(frame);
                 break;
-            case "DISCONNECT";
+            case "DISCONNECT":
                 handleDisconnect(frame);
                 break;
             default:
@@ -89,7 +95,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         // Extract required header and send rececipt.
         String receiptID = splitHeaderValue(frame.getHeaders().get(0));
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
-
+        
         connections.disconnect(connectionId);
     }
 
@@ -99,10 +105,25 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String subscriptionID = splitHeaderValue(frame.getHeaders().get(1));
         String receiptID = splitHeaderValue(frame.getHeaders().get(2));
 
-        
-
+        currentUser.addSub(destination, subscriptionID);
+        connections.subscribe(destination, connectionId);
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID +  "\n\n" + "\\u0000");
     }
 
+    /************************************ UNSUBSCRIBE ***************************************/
+    private void handleUnsubscribe(Frame frame) {
+        String subscriptionID = splitHeaderValue(frame.getHeaders().get(0));
+        String receiptID = splitHeaderValue(frame.getHeaders().get(1));
+
+        String channel = currentUser.removeSub(subscriptionID);
+        connections.unsubscribe(channel, connectionId);
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID +  "\n\n" + "\\u0000");
+    }
+
+    /************************************ SEND ***************************************/
+    private void handleSend(Frame frame) {
+
+    }
 
     public void sendErrorFrame(String msg) {
         connections.send(connectionId, msg);
