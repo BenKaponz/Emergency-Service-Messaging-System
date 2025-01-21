@@ -3,12 +3,13 @@ package bgu.spl.net.srv;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ConnectionsImpl<T> implements Connections<T> {
+import bgu.spl.net.impl.stomp.User;
 
+public class ConnectionsImpl<T> implements Connections<T> {
 
     private final ConcurrentHashMap<Integer, ConnectionHandler<T>> activeConnections;
     private final ConcurrentHashMap<String, List<Integer>> channelSubscriptions;
-
+    private final ConcurrentHashMap<String, User> allUsers;
 
     private static class connectionsImplHolder {
         private static final ConnectionsImpl instance = new ConnectionsImpl<>();
@@ -21,6 +22,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
     public ConnectionsImpl() {
         this.activeConnections = new ConcurrentHashMap<>();
         this.channelSubscriptions = new ConcurrentHashMap<>();
+        this.allUsers = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -51,6 +53,25 @@ public class ConnectionsImpl<T> implements Connections<T> {
         }
     }
 
+    public boolean isUserExists(String userName) {
+        User user = allUsers.get(userName);
+        return user != null;
+    }
 
+    public void addUser(User user) {
+        allUsers.put(user.getUserName(), user);
+    }
+
+    // public void subscribe(String channel, int connectionId) {
+    //     channelSubscriptions.putIfAbsent(channel, new CopyOnWriteArrayList<>()); // LIVDOK
+    //     channelSubscriptions.get(channel).add(connectionId);
+    // }
+
+    // public void unsubscribe(String channel, int connectionId) {
+    //     List<Integer> subscribers = channelSubscriptions.get(channel);
+    //     if (subscribers != null) {
+    //         subscribers.remove(Integer.valueOf(connectionId));
+    //     }
+    // }
 
 }

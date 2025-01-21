@@ -13,7 +13,7 @@ public abstract class BaseServer<T> implements Server<T> {
     private final Supplier<MessagingProtocol<T>> protocolFactory;
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
     private ServerSocket sock;
-    private int connectionID;
+    private int connectionIdGenerator;  // HERE
 
     public BaseServer(
             int port,
@@ -24,7 +24,7 @@ public abstract class BaseServer<T> implements Server<T> {
         this.protocolFactory = protocolFactory;
         this.encdecFactory = encdecFactory;
 		this.sock = null;
-        this.connectionID = 1;
+        this.connectionIdGenerator = 1;  // HERE
     }
 
     @Override
@@ -43,9 +43,9 @@ public abstract class BaseServer<T> implements Server<T> {
                         clientSock,
                         encdecFactory.get(),
                         protocolFactory.get(),
-                        connectionID);
+                        connectionIdGenerator); // ADDED THIS
 
-                connectionID++;
+                    connectionIdGenerator++; // AND THIS
                 execute(handler);
             }
         } catch (IOException ex) {
