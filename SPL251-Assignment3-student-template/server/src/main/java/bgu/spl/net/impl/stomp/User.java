@@ -8,7 +8,7 @@ public class User {
     private String userName;
     private String password;
     private boolean isConnected;
-    private Map<Integer, String> subscribeIdToChannels; 
+    private Map<String, String> subscribeIdToChannels; 
 
     public User(String userName, String password) {
         this.connectionId = -1;
@@ -35,11 +35,11 @@ public class User {
         return isConnected;
     }
 
-    public void addSub(String channel, int subscriptionID) {
+    public void addSub(String channel, String subscriptionID) {
         this.subscribeIdToChannels.put(subscriptionID, channel);
     }
 
-    public String removeSub(int subscriptionID){
+    public String removeSub(String subscriptionID){
         return this.subscribeIdToChannels.remove(subscriptionID);
     }
 
