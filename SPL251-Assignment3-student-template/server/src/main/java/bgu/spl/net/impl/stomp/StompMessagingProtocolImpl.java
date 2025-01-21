@@ -15,9 +15,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
 
     @Override
-    public void start(int connectionId, Connections<String> connections) {
-        this.connectionId = connectionId;
+    public void start(int connectionId, Connections<String> connections) {        
         this.connections = (ConnectionsImpl<String>) connections;
+        this.connectionId = connectionId;
+        System.out.println("protocol has started!");
     }
 
     @Override
@@ -36,9 +37,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         }
 
         switch (command) {
-            case "SEND":
-                handleSend(msgLines);
-                break;
             case "SUBSCRIBE":
                 handleSubscribe(msgLines);
                 break;
@@ -47,7 +45,10 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 break;
             case "DISCONNECT":
                 handleDisconnect(msgLines);
-                break;
+                break;    
+            case "SEND":
+                handleSend(msgLines);
+                break;    
             default:
                 sendErrorFrame("Invalid command: " + command);
         }
@@ -90,7 +91,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         user.setConnected(true);
         user.setConnectionId(connectionId);
 
-        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\u0000");// ẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞ
+        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\u0000");
     }
 
     /************************************
@@ -100,9 +101,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         // Extract required header and send rececipt.
         String receiptID = splitHeaderValue(msgLines[1]);
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
+        currentUser.setConnected(false);
+        currentUser = null;
 
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
         connections.disconnect(connectionId);
+        
     }
 
     /************************************
