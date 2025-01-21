@@ -16,6 +16,8 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     private BufferedInputStream in;
     private BufferedOutputStream out;
     private volatile boolean connected = true;
+    
+    //Added fields 
     private int connectionID;
     private final ConnectionsImpl<T> connectionsImpl;
 

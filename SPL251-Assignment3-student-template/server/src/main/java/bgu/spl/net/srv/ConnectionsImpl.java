@@ -53,6 +53,10 @@ public class ConnectionsImpl<T> implements Connections<T> {
         }
     }
 
+    public User getUser(String userName) {
+        return allUsers.get(userName);
+    }
+
     public boolean isUserExists(String userName) {
         User user = allUsers.get(userName);
         return user != null;

@@ -57,6 +57,8 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String passcode = frame.getHeaders().get("passcode");
 
         
+
+        
     }
     
 }
