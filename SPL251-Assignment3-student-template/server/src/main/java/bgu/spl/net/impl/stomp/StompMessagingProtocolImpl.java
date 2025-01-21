@@ -101,7 +101,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         // Extract required header and send rececipt.
         String receiptID = splitHeaderValue(msgLines[1]);
-        currentUser.setConnected(false);
+        currentUser.disconnect();
         currentUser = null;
 
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
@@ -140,8 +140,14 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private void handleSend(String[] msgLines) {
         String destination = splitHeaderValue(msgLines[1]);
         String body = getBodyMessage(msgLines);
-        String msg = "MESSAGE\nsubscription: "destination:" + destination + "\nmessage-id: " +connections.getMessageID() + "\n\n" + body + "\n" + "\u0000";
-        connections.send(destination, msg);
+        String message = "MESSAGE\nsubscription: " + currentUser.getSubscriptionID(destination) 
+                    + "\nmessage-id: " + connections.getMessageID()
+                    + "\ndestination: " + destination
+                    + "\n\n"
+                    + body;
+
+        connections.send(destination, message);
+
     }
     
     public void sendErrorFrame(String msg) {

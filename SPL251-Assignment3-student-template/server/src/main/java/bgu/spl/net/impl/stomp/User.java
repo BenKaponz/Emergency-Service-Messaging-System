@@ -36,7 +36,7 @@ public class User {
     }
 
     public void addSub(String channel, String subscriptionID) {
-        this.subscribeIdToChannels.put(channel, subscriptionID);
+        this.subscribeIdToChannels.put(subscriptionID, channel);
     }
 
     public String removeSub(String subscriptionID){
@@ -44,7 +44,12 @@ public class User {
     }
 
     public String getSubscriptionID (String channel) {
-        return subscribeIdToChannels.get(channel);
+        for (Map.Entry<String, String> entry : subscribeIdToChannels.entrySet()) {
+            if (entry.getValue().equals(channel)) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
 
     // SETTERS
@@ -55,5 +60,13 @@ public class User {
     public void setConnected(boolean connected) {
         isConnected = connected;
     }
+
+    public void disconnect() {
+        setConnected(false);
+        setConnectionId(-1);
+        subscribeIdToChannels = new HashMap<>();
+    }
+
+
 
 }
