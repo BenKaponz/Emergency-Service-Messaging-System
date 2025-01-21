@@ -41,7 +41,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 handleDisconnect(frame);
                 break;
             default:
-                handleError(frame, "Invalid command: " + frame.getCommand());
+                sendErrorFrame("Invalid command: " + frame.getCommand());
         }
     }
 
@@ -50,6 +50,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         return shouldTerminate;
     }
 
+    /************************************ CONNECT **************************************/
     private void handleConnect(Frame frame) {
 
         // Extract required headers
@@ -81,6 +82,27 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         
         connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\u0000");//ẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞ
     }
+
+    /************************************ DISCONNECT **************************************/
+    private void handleDisconnect (Frame frame) {
+
+        // Extract required header and send rececipt.
+        String receiptID = splitHeaderValue(frame.getHeaders().get(0));
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
+
+        connections.disconnect(connectionId);
+    }
+
+    /************************************ SUBSCRIBE ***************************************/
+    private void handleSubscribe (Frame frame) {
+        String destination = splitHeaderValue(frame.getHeaders().get(0));
+        String subscriptionID = splitHeaderValue(frame.getHeaders().get(1));
+        String receiptID = splitHeaderValue(frame.getHeaders().get(2));
+
+        
+
+    }
+
 
     public void sendErrorFrame(String msg) {
         connections.send(connectionId, msg);

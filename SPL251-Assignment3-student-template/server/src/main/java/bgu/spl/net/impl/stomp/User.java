@@ -1,19 +1,21 @@
 package bgu.spl.net.impl.stomp;
 
-import bgu.spl.net.srv.ConnectionHandler;
+import java.util.Map;
+import java.util.HashMap;
 
 public class User {
     private int connectionId;
     private String userName;
     private String password;
     private boolean isConnected;
-    
+    private Map<Integer, String> subscribeIdToChannels; 
 
     public User(String userName, String password) {
         this.connectionId = -1;
         this.userName = userName;
         this.password = password;        
         this.isConnected = false;
+        this.subscribeIdToChannels = new HashMap<>();
     }
 
     // GETTERS

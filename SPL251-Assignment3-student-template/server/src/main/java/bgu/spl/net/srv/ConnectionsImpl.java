@@ -1,5 +1,6 @@
 package bgu.spl.net.srv;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -68,6 +69,18 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
     public void addUser(User user) {
         allUsers.put(user.getUserName(), user);
+    }
+
+    public void subscribe(String channel, int subscriptionId) {
+        synchronized (channelSubscriptions) {
+            if (!channelSubscriptions.containsKey(channel)) {
+                channelSubscriptions.put(channel, new LinkedList<>());
+            }
+            // add the subscription id to the user
+            user.addSubscriptionIdInChannel(channel, subscriptionId);
+            // add the user to the channel
+            channelSubscriptions.get(channel).put(subscriptionId, user);
+        }
     }
 
 }
