@@ -48,7 +48,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         return shouldTerminate;
     }
 
-    private void handleConnect(Frame frame){
+    private void handleConnect(Frame frame) {
 
         // Extract required headers
         String version = frame.getHeaders().get("accept-version");
@@ -57,6 +57,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String passcode = frame.getHeaders().get("passcode");
 
         // Validate headers
+<<<<<<< Updated upstream
     if (version == null || !version.equals("1.2")) {
         //sendErrorFrame("Unsupported STOMP version. Expected version 1.2.", frame.getConnectionID());
         return;
@@ -88,16 +89,58 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         // Check if the user is already connected
         if (user.isConnected()) {
             //sendErrorFrame("User already connected: " + login, frame.getConnectionID());
+=======
+        if (version == null || !version.equals("1.2")) {
+            // sendErrorFrame("Unsupported STOMP version. Expected version 1.2.",
+            // frame.getConnectionID());
             return;
         }
-    }
 
-    // Mark user as connected
-    user.connect(frame.getConnectionID(), frame.getConnectionHandler());
+        if (host == null || !host.equals("stomp.cs.bgu.ac.il")) {
+            // sendErrorFrame("Invalid host. Expected stomp.cs.bgu.ac.il.",
+            // frame.getConnectionID());
+>>>>>>> Stashed changes
+            return;
+        }
 
+        if (login == null || passcode == null) {
+            // sendErrorFrame("Missing login or passcode.", frame.getConnectionID());
+            return;
+        }
+
+<<<<<<< Updated upstream
     // Send CONNECTED frame
     String connectedFrame = "CONNECTED\nversion:1.2\n\n\u0000";
     connections.send(frame.getConnectionID(), connectedFrame);
+=======
+        // Validate user credentials (example logic)
+        User user = connections.getUser(login); // Fetch the user object
+        if (user == null) {
+            // New user, create and store it
+            user = new User(login, passcode);
+            connectionsImpl.addUser(user);
+        } else {
+            // Existing user, check credentials
+            if (!user.getPassword().equals(passcode)) {
+                sendErrorFrame("Invalid credentials for user: " + login, frame.getConnectionID());
+                return;
+            }
+
+            // Check if the user is already connected
+            if (user.isConnected()) {
+                sendErrorFrame("User already connected: " + login, frame.getConnectionID());
+                return;
+            }
+        }
+
+        // Mark user as connected
+        user.connect(frame.getConnectionID(), frame.getConnectionHandler());
+
+        // Send CONNECTED frame
+        String connectedFrame = "CONNECTED\nversion:1.2\n\n\u0000";
+        connectionsImpl.send(frame.getConnectionID(), connectedFrame);
+
+>>>>>>> Stashed changes
     }
     
 }

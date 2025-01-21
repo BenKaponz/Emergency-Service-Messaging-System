@@ -1,46 +1,47 @@
 package bgu.spl.net.impl.stomp;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import bgu.spl.net.srv.ConnectionHandler;
-import bgu.spl.net.srv.ConnectionsImpl;
-
+import java.util.LinkedList;
+import java.util.List;
 
 public class Frame {
 
     private String command;
-    private Map<String, String> headers; //HeaderType & Value
+    private List<String> headers; //HeaderType & Value
     private String body;
     
-    private int connectionID;
-    private ConnectionsImpl<String> connections = ConnectionsImpl.getInstance();     // Singleton ref
-    private ConnectionHandler<String> connectionHandler; // Client's CH
+    public Frame(String message) {
+        this.headers = new LinkedList<>();
+
+        // Spliting msg 
+        String[] msgLines = message.split("\n");
     
-    public Frame(String message, int connectionID, ConnectionHandler<String> connectionHandler) {
-        this.headers = new HashMap<>();
-        this.connectionID = connectionID;
-        this.connectionHandler = connectionHandler;
+        // First line is the command
+        command = msgLines[0]; 
+        int index;
+
+        for (index = 1 ;index < msgLines.length; index++) {
+            // Break when finished headers.
+            if (msgLines[index].equals("")){
+                break;
+            }
+            headers.add(msgLines[index]);
+        }
+        
+        // After the empty line comes the body.
+        index++;
+        this.body = msgLines[index];
     }
 
     public String getCommand() {
         return command;
     }
 
-    public Map<String,String> getHeaders() {
+    public List<String> getHeaders() {
         return headers;
     }
 
     public String getBody() {
         return body;
-    }
-
-    public int getConnectionID() {
-        return connectionID;
-    }
-
-    public ConnectionHandler<String> getConnectionHandler() { 
-        return connectionHandler;
     }
 
 }
