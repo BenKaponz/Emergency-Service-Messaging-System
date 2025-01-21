@@ -17,17 +17,11 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     private BufferedOutputStream out;
     private volatile boolean connected = true;
     
-    //Added fields 
-    private int connectionID;
-    private final ConnectionsImpl<T> connectionsImpl;
 
-    @SuppressWarnings("unchecked")
-    public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, MessagingProtocol<T> protocol, int connectionID) {
+    public BlockingConnectionHandler(Socket sock, MessageEncoderDecoder<T> reader, MessagingProtocol<T> protocol) {
         this.sock = sock;
         this.encdec = reader;
         this.protocol = protocol;
-        this.connectionID = connectionID; // ADDED
-        this.connectionsImpl = ConnectionsImpl.getInstance(); // ADDED
     }
 
     @Override
@@ -37,9 +31,7 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
 
             in = new BufferedInputStream(sock.getInputStream());
             out = new BufferedOutputStream(sock.getOutputStream());
-            
-            connectionsImpl.connect(connectionID, this);  // *****************************
-            protocol.start(connectionID, connectionsImpl); // ****************************
+    
 
             while (!protocol.shouldTerminate() && connected && (read = in.read()) >= 0) {
                 T nextMessage = encdec.decodeNextByte((byte) read);

@@ -7,16 +7,13 @@ public class User {
     private String userName;
     private String password;
     private boolean isConnected;
-    private ConnectionHandler<String> connectionHandler;
-    // private HashMap<String, List<Frame>> userLog; // MA ZE
+    
 
     public User(String userName, String password) {
         this.connectionId = -1;
         this.userName = userName;
         this.password = password;        
         this.isConnected = false;
-        this.connectionHandler = null;  
-        // this.userLog = new HashMap(); // MA ZE
     }
 
     // GETTERS
@@ -32,16 +29,8 @@ public class User {
         return password;
     }
 
-    // public ConcurrentHashMap<Integer, String> getChannelSubscriptions() {
-    //     return channelSubscriptions;
-    // }
-
     public boolean isConnected() {
         return isConnected;
-    }
-
-    public ConnectionHandler<String> getConnectionHandler() {
-        return connectionHandler;
     }
 
     // SETTERS
@@ -51,22 +40,6 @@ public class User {
 
     public void setConnected(boolean connected) {
         isConnected = connected;
-    }
-
-    public void setConnectionHandler(ConnectionHandler<String> connectionHandler) {
-        this.connectionHandler = connectionHandler;
-    }
-
-    public void connect(int connectionId, ConnectionHandler<String> connectionHandler) {
-        setConnectionId(connectionId);
-        setConnectionHandler(connectionHandler);
-        setConnected(true);
-    }
-
-    public void disconect() {
-        setConnectionHandler(null);
-        setConnectionId(-1);
-        setConnected(false);
     }
 
 }

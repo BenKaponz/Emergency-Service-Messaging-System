@@ -9,13 +9,15 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private boolean shouldTerminate = false;
     private int connectionId;
     private ConnectionsImpl<String> connections;
+    private User currentUser = null;
 
-    public StompMessagingProtocolImpl(){}
+    public StompMessagingProtocolImpl() {
+    }
 
     @Override
     public void start(int connectionId, Connections<String> connections) {
         this.connectionId = connectionId;
-        this.connections = (ConnectionsImpl<String>)connections;
+        this.connections = (ConnectionsImpl<String>) connections;
     }
 
     @Override
@@ -48,60 +50,38 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         return shouldTerminate;
     }
 
-    private void handleConnect(Frame frame){
+    private void handleConnect(Frame frame) {
 
         // Extract required headers
-        String version = splitHeaderValue(frame.getHeaders().get(0));
-        String hostName = splitHeaderValue(frame.getHeaders().get(1));
         String userName = splitHeaderValue(frame.getHeaders().get(2));
         String password = splitHeaderValue(frame.getHeaders().get(3));
 
-        // Validate headers
-    // if (version == null || !version.equals("1.2")) {
-    //     sendErrorFrame("Unsupported STOMP version. Expected version 1.2.");
-    //     return;
-    // }
-
-    if (hostName == null || !hostName.equals("stomp.cs.bgu.ac.il")) {
-        sendErrorFrame("Invalid host. Expected stomp.cs.bgu.ac.il.");
-        return;
-    }
-    
-    if (userName == null || password == null) {
-        sendErrorFrame("Missing login or passcode.");
-        return;
-    }
-
-    // Validate user credentials (example logic)
-    User user = connections.getUser(userName); // Fetch the user object
-    if (user == null) {
-        // New user, create and store it
-        user = new User(userName, password);
-        connections.addUser(user);
-    } else {
-        // Existing user, check credentials
-        if (!user.getPassword().equals(passcode)) {
-            sendErrorFrame("Invalid credentials for user: " + login);
+        if (currentUser != null) {
+            sendErrorFrame("The client is already logged in, log out before trying again.");
             return;
         }
-
-        // Check if the user is already connected
-        if (user.isConnected()) {
-            sendErrorFrame("User already connected: " + login);
-            return;
+        User user = connections.getUser(userName);
+        // User never got created
+        if (user != null) {
+            if (!user.getPassword().equals(password)) {
+                sendErrorFrame("Wrong password");
+                return;
+            }
+            if (user.isConnected()) {
+                sendErrorFrame("User already logged in");
+                return;
+            }
         }
+        if (user == null) {
+            user = new User(userName, password);
+            connections.addUser(user);
+        }
+        user.setConnected(true);
+        user.setConnectionId(connectionId);
+        
+        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\u0000");//ẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞẞ
     }
 
-    // Mark user as connected
-    user.connect(frame.getConnectionID(), frame.getConnectionHandler());
-
-    // Send CONNECTED frame
-    String connectedFrame = "CONNECTED\nversion:1.2\n\n\u0000";
-    connections.send(frame.getConnectionID(), connectedFrame);
-    
-
-    }
-    
     public void sendErrorFrame(String msg) {
         connections.send(connectionId, msg);
         connections.disconnect(connectionId);

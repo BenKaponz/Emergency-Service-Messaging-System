@@ -5,6 +5,7 @@ import bgu.spl.net.api.MessagingProtocol;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 public abstract class BaseServer<T> implements Server<T> {
@@ -13,7 +14,9 @@ public abstract class BaseServer<T> implements Server<T> {
     private final Supplier<MessagingProtocol<T>> protocolFactory;
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
     private ServerSocket sock;
-    private int connectionIdGenerator;  // HERE
+
+    private AtomicInteger connectionIdGenerator;  // HERE
+    private ConnectionsImpl<T> connectionsImpl = ConnectionsImpl.getInstance();
 
     public BaseServer(
             int port,
@@ -24,7 +27,7 @@ public abstract class BaseServer<T> implements Server<T> {
         this.protocolFactory = protocolFactory;
         this.encdecFactory = encdecFactory;
 		this.sock = null;
-        this.connectionIdGenerator = 1;  // HERE
+        this.connectionIdGenerator = new AtomicInteger(1);  // HERE
     }
 
     @Override
@@ -38,15 +41,18 @@ public abstract class BaseServer<T> implements Server<T> {
             while (!Thread.currentThread().isInterrupted()) {
 
                 Socket clientSock = serverSock.accept();
+        
+                int connectionID = connectionIdGenerator.getAndIncrement(); //
+                MessagingProtocol<T> newProtocol = protocolFactory.get();   //
+                newProtocol.start(connectionID, connectionsImpl);           //
 
                 BlockingConnectionHandler<T> handler = new BlockingConnectionHandler<>(
                         clientSock,
                         encdecFactory.get(),
-                        protocolFactory.get(),
-                        connectionIdGenerator); // ADDED THIS
+                        newProtocol); 
 
-                    connectionIdGenerator++; // AND THIS
                 execute(handler);
+                connectionsImpl.connect(connectionID, handler);
             }
         } catch (IOException ex) {
         }

@@ -11,7 +11,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
     private final ConcurrentHashMap<String, List<Integer>> channelSubscriptions;      // Topic & Subscribers
     private final ConcurrentHashMap<String, User> allUsers;                           // Username & User
 
-    private final ConcurrentHashMap<Integer, String> activeUsers;                     // connectionID & username
+    //private final ConcurrentHashMap<Integer, String> activeUsers;                     // connectionID & username
     
 
     private static class connectionsImplHolder {
@@ -27,7 +27,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
         this.activeConnections = new ConcurrentHashMap<>();
         this.channelSubscriptions = new ConcurrentHashMap<>();
         this.allUsers = new ConcurrentHashMap<>();
-        this.activeUsers = new ConcurrentHashMap<>();
+        //this.activeUsers = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -69,41 +69,5 @@ public class ConnectionsImpl<T> implements Connections<T> {
     public void addUser(User user) {
         allUsers.put(user.getUserName(), user);
     }
-
-
-    // // Log in a user
-    // public /*synchronized*/ boolean login(String username, String password, int connectionId) {
-    //     if (!users.containsKey(username)) {
-    //         users.put(username, password); // Register new user
-    //     }
-    //     if (users.get(username).equals(password) && !activeUsers.containsKey(username)) {
-    //         activeUsers.put(connectionId, username);
-    //         return true;
-    //     }
-    //     return false;
-    // }
-
-    // // Log out a user
-    // public /*synchronized*/ void logout(String username) {
-    //     activeUsers.values().remove(username);
-    // }
-
-    // Get username by connection ID
-    public String getUsernameByConnectionId(int connectionId) {
-        return activeUsers.get(connectionId);
-    }
-
-
-    // public void subscribe(String channel, int connectionId) {
-    //     channelSubscriptions.putIfAbsent(channel, new CopyOnWriteArrayList<>()); // LIVDOK
-    //     channelSubscriptions.get(channel).add(connectionId);
-    // }
-
-    // public void unsubscribe(String channel, int connectionId) {
-    //     List<Integer> subscribers = channelSubscriptions.get(channel);
-    //     if (subscribers != null) {
-    //         subscribers.remove(Integer.valueOf(connectionId));
-    //     }
-    // }
 
 }
