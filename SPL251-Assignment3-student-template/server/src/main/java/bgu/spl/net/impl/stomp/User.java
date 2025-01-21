@@ -35,6 +35,14 @@ public class User {
         return isConnected;
     }
 
+    public void addSub(String channel, int subscriptionID) {
+        this.subscribeIdToChannels.put(subscriptionID, channel);
+    }
+
+    public String removeSub(int subscriptionID){
+        return this.subscribeIdToChannels.remove(subscriptionID);
+    }
+
     // SETTERS
     public void setConnectionId(int connectionId) {
         this.connectionId = connectionId;

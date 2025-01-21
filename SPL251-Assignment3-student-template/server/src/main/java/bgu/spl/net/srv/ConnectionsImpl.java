@@ -71,15 +71,18 @@ public class ConnectionsImpl<T> implements Connections<T> {
         allUsers.put(user.getUserName(), user);
     }
 
-    public void subscribe(String channel, int subscriptionId) {
+    public void subscribe(String channel, int connectionID) {
         synchronized (channelSubscriptions) {
             if (!channelSubscriptions.containsKey(channel)) {
                 channelSubscriptions.put(channel, new LinkedList<>());
             }
-            // add the subscription id to the user
-            user.addSubscriptionIdInChannel(channel, subscriptionId);
-            // add the user to the channel
-            channelSubscriptions.get(channel).put(subscriptionId, user);
+            channelSubscriptions.get(channel).add(connectionID);
+        }
+    }
+
+    public void unsubscribe(String channel, int connectionID) {
+        synchronized (channelSubscriptions) {
+            channelSubscriptions.get(channel).remove(connectionID);
         }
     }
 
