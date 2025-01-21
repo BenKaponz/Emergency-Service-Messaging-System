@@ -104,7 +104,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         currentUser.setConnected(false);
         currentUser = null;
 
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
         connections.disconnect(connectionId);
         
     }
@@ -119,7 +119,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         currentUser.addSub(destination, subscriptionID);
         connections.subscribe(destination, connectionId);
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
     }
 
     /************************************
@@ -131,7 +131,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         String channel = currentUser.removeSub(subscriptionID);
         connections.unsubscribe(channel, connectionId);
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
     }
 
     /************************************
@@ -140,12 +140,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private void handleSend(String[] msgLines) {
         String destination = splitHeaderValue(msgLines[1]);
         String body = getBodyMessage(msgLines);
-        String msg = "MESSAGE\ndestination:" + destination + "\n\n" + body + "\n" + "\\u0000";
+        String msg = "MESSAGE\nsubscription: "destination:" + destination + "\nmessage-id: " +connections.getMessageID() + "\n\n" + body + "\n" + "\u0000";
         connections.send(destination, msg);
     }
     
     public void sendErrorFrame(String msg) {
-        connections.send(connectionId, msg);
+        connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n\u0000");
         connections.disconnect(connectionId);
         shouldTerminate = true;
     }

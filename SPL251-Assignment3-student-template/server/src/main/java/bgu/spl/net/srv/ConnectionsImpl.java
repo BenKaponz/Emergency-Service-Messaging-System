@@ -3,6 +3,7 @@ package bgu.spl.net.srv;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import bgu.spl.net.impl.stomp.User;
 
@@ -11,8 +12,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
     private final ConcurrentHashMap<Integer, ConnectionHandler<T>> activeConnections; // ConnectionID & ConnectionHandler
     private final ConcurrentHashMap<String, List<Integer>> channelSubscriptions;      // Topic & Subscribers
     private final ConcurrentHashMap<String, User> allUsers;                           // Username & User
-
-    //private final ConcurrentHashMap<Integer, String> activeUsers;                     // connectionID & username
+    private AtomicInteger messageIDGen;
     
 
     private static class connectionsImplHolder {
@@ -28,7 +28,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
         this.activeConnections = new ConcurrentHashMap<>();
         this.channelSubscriptions = new ConcurrentHashMap<>();
         this.allUsers = new ConcurrentHashMap<>();
-        //this.activeUsers = new ConcurrentHashMap<>();
+        this.messageIDGen = new AtomicInteger(1);
     }
 
     @Override
@@ -84,6 +84,10 @@ public class ConnectionsImpl<T> implements Connections<T> {
         synchronized (channelSubscriptions) {
             channelSubscriptions.get(channel).remove(connectionID);
         }
+    }
+
+    public int getMessageID(){
+        return this.messageIDGen.incrementAndGet();
     }
 
 }
