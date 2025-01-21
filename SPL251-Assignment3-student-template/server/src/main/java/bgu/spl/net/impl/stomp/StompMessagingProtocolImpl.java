@@ -8,14 +8,14 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     private boolean shouldTerminate = false;
     private int connectionID;
-    private Connections<String> connections;
+    private ConnectionsImpl<String> connections;
 
     public StompMessagingProtocolImpl(){}
 
     @Override
     public void start(int connectionId, Connections<String> connections) {
         this.connectionID = connectionId;
-        this.connections = connections;
+        this.connections = (ConnectionsImpl<String>)connections;
     }
 
     @Override
@@ -77,17 +77,17 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     if (user == null) {
         // New user, create and store it
         user = new User(login, passcode);
-        connectionsImpl.addUser(user);
+        connections.addUser(user);
     } else {
         // Existing user, check credentials
         if (!user.getPassword().equals(passcode)) {
-            sendErrorFrame("Invalid credentials for user: " + login, frame.getConnectionID());
+            //sendErrorFrame("Invalid credentials for user: " + login, frame.getConnectionID());
             return;
         }
 
         // Check if the user is already connected
         if (user.isConnected()) {
-            sendErrorFrame("User already connected: " + login, frame.getConnectionID());
+            //sendErrorFrame("User already connected: " + login, frame.getConnectionID());
             return;
         }
     }
@@ -97,9 +97,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     // Send CONNECTED frame
     String connectedFrame = "CONNECTED\nversion:1.2\n\n\u0000";
-    connectionsImpl.send(frame.getConnectionID(), connectedFrame);
-
-        
+    connections.send(frame.getConnectionID(), connectedFrame);
     }
     
 }
