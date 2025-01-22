@@ -11,8 +11,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private ConnectionsImpl<String> connections;
     private User currentUser = null;
 
-    public StompMessagingProtocolImpl() {
-    }
 
     @Override
     public void start(int connectionId, Connections<String> connections) {        
