@@ -33,6 +33,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             sendErrorFrame("Cannot preform the action because user is not connected");
             return;
         }
+        System.out.println("Message has been recieved from " + connectionId);
 
         switch (command) {
             case "SUBSCRIBE":
@@ -117,6 +118,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         currentUser.addSub(destination, subscriptionID);
         connections.subscribe(destination, connectionId);
+
+        System.out.println("SUBSCRIBING TO " + destination);
+        
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
     }
 
@@ -145,6 +149,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                     + body;
 
         connections.send(destination, message);
+
 
     }
     
