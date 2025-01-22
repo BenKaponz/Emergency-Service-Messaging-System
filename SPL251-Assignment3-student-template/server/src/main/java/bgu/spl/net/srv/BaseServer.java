@@ -16,7 +16,7 @@ public abstract class BaseServer<T> implements Server<T> {
     private ServerSocket sock;
 
     private AtomicInteger connectionIdGenerator;  // HERE
-    private ConnectionsImpl<T> connectionsImpl = ConnectionsImpl.getInstance();
+    private ConnectionsImpl<T> connectionsImpl; // HERE
 
     public BaseServer(
             int port,
@@ -28,6 +28,7 @@ public abstract class BaseServer<T> implements Server<T> {
         this.encdecFactory = encdecFactory;
 		this.sock = null;
         this.connectionIdGenerator = new AtomicInteger(1);  // HERE
+        connectionsImpl = ConnectionsImpl.getInstance(); // HERE
     }
 
     @Override
@@ -42,17 +43,17 @@ public abstract class BaseServer<T> implements Server<T> {
 
                 Socket clientSock = serverSock.accept();
         
-                int connectionID = connectionIdGenerator.getAndIncrement(); //
-                MessagingProtocol<T> newProtocol = protocolFactory.get();   //
-                newProtocol.start(connectionID, connectionsImpl);           //
+                int connectionID = connectionIdGenerator.getAndIncrement(); // HERE
+                MessagingProtocol<T> newProtocol = protocolFactory.get();   // HERE
+                newProtocol.start(connectionID, connectionsImpl);           // HERE
 
                 BlockingConnectionHandler<T> handler = new BlockingConnectionHandler<>(
-                        clientSock,
+                        clientSock, 
                         encdecFactory.get(),
-                        newProtocol); 
+                        newProtocol);   //HERE
 
                 execute(handler);
-                connectionsImpl.connect(connectionID, handler);
+                connectionsImpl.connect(connectionID, handler); // HERE
             }
         } catch (IOException ex) {
         }

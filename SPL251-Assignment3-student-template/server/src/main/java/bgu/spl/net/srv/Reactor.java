@@ -10,6 +10,7 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 public class Reactor<T> implements Server<T> {
@@ -19,9 +20,11 @@ public class Reactor<T> implements Server<T> {
     private final Supplier<MessageEncoderDecoder<T>> readerFactory;
     private final ActorThreadPool pool;
     private Selector selector;
-
     private Thread selectorThread;
     private final ConcurrentLinkedQueue<Runnable> selectorTasks = new ConcurrentLinkedQueue<>();
+
+    private AtomicInteger connectionIdGenerator;  // HERE
+    private ConnectionsImpl<T> connectionsImpl;     // HERE
 
     public Reactor(
             int numThreads,
@@ -33,6 +36,9 @@ public class Reactor<T> implements Server<T> {
         this.port = port;
         this.protocolFactory = protocolFactory;
         this.readerFactory = readerFactory;
+
+        this.connectionIdGenerator = new AtomicInteger(1);  // HERE
+        connectionsImpl = ConnectionsImpl.getInstance(); // HERE
     }
 
     @Override
@@ -94,13 +100,20 @@ public class Reactor<T> implements Server<T> {
 
     private void handleAccept(ServerSocketChannel serverChan, Selector selector) throws IOException {
         SocketChannel clientChan = serverChan.accept();
+
+        int connectionID = connectionIdGenerator.getAndIncrement(); // HERE
+        MessagingProtocol<T> newProtocol = protocolFactory.get();   // HERE
+        newProtocol.start(connectionID, connectionsImpl);           // HERE
+
         clientChan.configureBlocking(false);
         final NonBlockingConnectionHandler<T> handler = new NonBlockingConnectionHandler<>(
                 readerFactory.get(),
-                protocolFactory.get(),
-                clientChan,
+                newProtocol,    // HERE
+                clientChan,    
                 this);
+
         clientChan.register(selector, SelectionKey.OP_READ, handler);
+        connectionsImpl.connect(connectionID, handler);  // HERE
     }
 
     private void handleReadWrite(SelectionKey key) {
