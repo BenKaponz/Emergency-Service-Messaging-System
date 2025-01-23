@@ -91,7 +91,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         user.setConnected(true);
         user.setConnectionId(connectionId);
 
-        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\0");
+        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n");
     }
 
     /************************************
@@ -104,7 +104,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         currentUser.disconnect();
         currentUser = null;
 
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n\0");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
         connections.disconnect(connectionId);
         
     }
@@ -122,7 +122,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         System.out.println("SUBSCRIBING TO " + destination);
         
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n\0");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
     }
 
     /************************************
@@ -134,7 +134,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         String channel = currentUser.removeSub(subscriptionID);
         connections.unsubscribe(channel, connectionId);
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n\0");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
     }
 
     /************************************
@@ -148,7 +148,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                     + "\ndestination: " + destination
                     + "\n\n"
                     + body
-                    + "\0";
+                    ;
 
         connections.send(destination, message);
 
@@ -156,7 +156,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
     
     public void sendErrorFrame(String msg) {
-        connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n\0");
+        connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n");
         connections.disconnect(connectionId);
         shouldTerminate = true;
     }

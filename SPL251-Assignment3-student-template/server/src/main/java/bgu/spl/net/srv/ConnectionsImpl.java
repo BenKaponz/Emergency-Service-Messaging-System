@@ -36,8 +36,6 @@ public class ConnectionsImpl<T> implements Connections<T> {
     public boolean send(int connectionId, T msg) {
         synchronized (activeConnections) { /************************************** SYNCHRONIZED ****************/
             ConnectionHandler<T> handler = activeConnections.get(connectionId);
-            System.out.println("sending message : " + msg);
-            System.out.println("connection is null : " + handler == null);
             if (handler != null) {
                 handler.send(msg);
                 return true;
@@ -45,6 +43,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
             return false;
         }
     }
+
 
     @Override
     public void send(String channel, T msg) {

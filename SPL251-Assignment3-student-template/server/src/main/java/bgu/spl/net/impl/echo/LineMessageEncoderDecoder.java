@@ -56,7 +56,6 @@ public class LineMessageEncoderDecoder implements MessageEncoderDecoder<String> 
 
     @Override
     public String decodeNextByte(byte nextByte) {
-        System.out.println(nextByte);
         // '\0' marks the end of a message
         if (nextByte == '\0') {
             return popString();
