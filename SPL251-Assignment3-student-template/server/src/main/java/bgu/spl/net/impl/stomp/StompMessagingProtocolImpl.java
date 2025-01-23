@@ -106,19 +106,16 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         System.out.println(currentUser.getUserName() + " IS TRYING TO DISCONNECT FROM THE SERVER");
 
-        System.out.println(" FIRST CONNECTION ID IS " + connectionId);
         // Extract required header and send rececipt.
         String receiptID = splitHeaderValue(msgLines[1]);
         currentUser.disconnect();
         currentUser = null;
 
-        System.out.println(" SECOND CONNECTION ID IS " + connectionId);
-
         //connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
         connections.send(connectionId, "bye");
         connections.disconnect(connectionId);
 
-        System.out.println( " DISCONNECTED SUCCESSFULLY!!!!!!!!");
+        System.out.println( "DISCONNECTED SUCCESSFULLY!!!!!!!!");
 
         
     }
