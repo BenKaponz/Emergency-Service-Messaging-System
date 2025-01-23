@@ -34,7 +34,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             return;
         }
         System.out.println("Message has been recieved from " + connectionId);
-
+        System.out.println("Command is :" + command);
         switch (command) {
             case "SUBSCRIBE":
                 handleSubscribe(msgLines);
@@ -87,10 +87,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             user = new User(userName, password);
             connections.addUser(user);
         }
+        currentUser = user;
         user.setConnected(true);
         user.setConnectionId(connectionId);
 
-        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\u0000");
+        connections.send(connectionId, "CONNECTED\nversion:1.2\n\n\0");
     }
 
     /************************************
@@ -103,7 +104,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         currentUser.disconnect();
         currentUser = null;
 
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n\0");
         connections.disconnect(connectionId);
         
     }
@@ -121,7 +122,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         System.out.println("SUBSCRIBING TO " + destination);
         
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n\0");
     }
 
     /************************************
@@ -133,7 +134,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         String channel = currentUser.removeSub(subscriptionID);
         connections.unsubscribe(channel, connectionId);
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n" + "\u0000");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n\0");
     }
 
     /************************************
@@ -146,7 +147,8 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                     + "\nmessage-id: " + connections.getMessageID()
                     + "\ndestination: " + destination
                     + "\n\n"
-                    + body;
+                    + body
+                    + "\0";
 
         connections.send(destination, message);
 
@@ -154,7 +156,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     }
     
     public void sendErrorFrame(String msg) {
-        connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n\u0000");
+        connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n\0");
         connections.disconnect(connectionId);
         shouldTerminate = true;
     }
