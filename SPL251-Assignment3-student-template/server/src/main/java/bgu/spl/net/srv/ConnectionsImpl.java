@@ -85,13 +85,20 @@ public class ConnectionsImpl<T> implements Connections<T> {
                 channelSubscriptions.put(channel, new CopyOnWriteArrayList<>());
             }
             channelSubscriptions.get(channel).add(connectionID);
+
+
+            for (Integer conID : channelSubscriptions.get(channel)) {
+                System.out.println(conID + "IS SUBSCRIBED TO" + channel);
+            }
         }
     }
 
     public void unsubscribe(String channel, int connectionID) {
         synchronized (channelSubscriptions) {  /************************************** SYNCHRONIZED ****************/
-            channelSubscriptions.get(channel).remove(connectionID);
+            channelSubscriptions.get(channel).remove(Integer.valueOf(connectionID));
         }
+        System.out.println(channelSubscriptions.get(channel).isEmpty());
+
     }
 
     public int getMessageID() {

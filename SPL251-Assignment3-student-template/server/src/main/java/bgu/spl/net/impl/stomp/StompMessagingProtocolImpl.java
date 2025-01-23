@@ -151,8 +151,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                     ;
 
         connections.send(destination, message);
-
-
+        connections.send(connectionId, "RECEIPT\nMessage sent successfully" + "\n\n");
     }
     
     public void sendErrorFrame(String msg) {
