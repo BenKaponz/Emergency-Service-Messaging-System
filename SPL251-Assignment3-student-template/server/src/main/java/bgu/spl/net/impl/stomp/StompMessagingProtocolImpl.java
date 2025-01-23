@@ -33,8 +33,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             sendErrorFrame("Cannot preform the action because user is not connected");
             return;
         }
-        System.out.println("Message has been recieved from " + connectionId);
-        System.out.println("Command is :" + command);
         switch (command) {
             case "SUBSCRIBE":
                 handleSubscribe(msgLines);
@@ -67,6 +65,8 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String userName = splitHeaderValue(msgLines[3]);
         String password = splitHeaderValue(msgLines[4]);
 
+        System.out.println(userName + " IS TRYING TO CONNECT TO THE SERVER");
+
         if (currentUser != null) {
             sendErrorFrame("The client is already logged in, log out before trying again.");
             return;
@@ -74,6 +74,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         User user = connections.getUser(userName);
         // User never got created
         if (user != null) {
+            System.out.println(userName + " EXISTS, CHECKING IF HE PUT THE CORRECT PASSWORD");
             if (!user.getPassword().equals(password)) {
                 sendErrorFrame("Wrong password");
                 return;
@@ -84,6 +85,8 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             }
         }
         if (user == null) {
+            System.out.println(userName + " NOT EXISTS, CREATING A NEW ONE");
+
             user = new User(userName, password);
             connections.addUser(user);
         }
@@ -92,6 +95,8 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         user.setConnectionId(connectionId);
 
         connections.send(connectionId, "CONNECTED\nversion:1.2\n\n");
+
+        System.out.println(userName + " CONNECTED SUCCESSFULLY!!!!!!!!");
     }
 
     /************************************
@@ -99,13 +104,22 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
      **************************************/
     private void handleDisconnect(String[] msgLines) {
 
+        System.out.println(currentUser.getUserName() + " IS TRYING TO DISCONNECT FROM THE SERVER");
+
+        System.out.println(" FIRST CONNECTION ID IS " + connectionId);
         // Extract required header and send rececipt.
         String receiptID = splitHeaderValue(msgLines[1]);
         currentUser.disconnect();
         currentUser = null;
 
-        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
+        System.out.println(" SECOND CONNECTION ID IS " + connectionId);
+
+        //connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
+        connections.send(connectionId, "bye");
         connections.disconnect(connectionId);
+
+        System.out.println( " DISCONNECTED SUCCESSFULLY!!!!!!!!");
+
         
     }
 
@@ -117,12 +131,15 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String subscriptionID = splitHeaderValue(msgLines[2]);
         String receiptID = splitHeaderValue(msgLines[3]);
 
+        System.out.println(currentUser.getUserName() + " SUBSCRIBING TO " + destination);
+
         currentUser.addSub(destination, subscriptionID);
         connections.subscribe(destination, connectionId);
-
-        System.out.println("SUBSCRIBING TO " + destination);
         
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
+
+        System.out.println(currentUser.getUserName() + " SUCCESSFULLY SUBSCRIBED TO " + destination +"!!!!!!!!!!!!!!!!!!");
+
     }
 
     /************************************
@@ -133,8 +150,13 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String receiptID = splitHeaderValue(msgLines[2]);
 
         String channel = currentUser.removeSub(subscriptionID);
+
+        System.out.println(currentUser.getUserName() + " UNSUBSCRIBING FROM " + channel);
+
         connections.unsubscribe(channel, connectionId);
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
+
+        System.out.println(currentUser.getUserName() +" SUCCESSFULLY UNSUBSCRIBED FROM " + channel + "!!!!!!!!!!!!!!!!!!");
     }
 
     /************************************
@@ -142,19 +164,30 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
      ***************************************/
     private void handleSend(String[] msgLines) {
         String destination = splitHeaderValue(msgLines[1]);
+        
+        if (currentUser.getSubscriptionID(destination) == null) {
+            sendErrorFrame("User isn't subscribed to " + destination);
+            return;
+        }
+
+        System.out.println(currentUser.getUserName() + " IS SENDING MESSAGES TO ALL THE CHICKS FROM " + destination + ". BE READY AND BRACE YOURSELF!");
         String body = getBodyMessage(msgLines);
         String message = "MESSAGE\nsubscription: " + currentUser.getSubscriptionID(destination) 
                     + "\nmessage-id: " + connections.getMessageID()
                     + "\ndestination: " + destination
                     + "\n\n"
                     + body
+                    + "\n"
                     ;
 
         connections.send(destination, message);
-        connections.send(connectionId, "RECEIPT\nMessage sent successfully" + "\n\n");
+
+        System.out.println("ALL THE CHICKS FROM " + destination +" HAVE RECIEVED SUCCESSFULLY THE MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!");
     }
     
     public void sendErrorFrame(String msg) {
+        System.out.println("ERROR DETECTED - CALL THE POWERPUFF GIRLS!!!!!!!!!!!!!!!!!!!!!");
+        
         connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n");
         connections.disconnect(connectionId);
         shouldTerminate = true;
@@ -169,6 +202,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         index++;
         while (index < msgLines.length) {
             body = body + msgLines[index] + "\n";
+            index++;
         }
 
         return body;

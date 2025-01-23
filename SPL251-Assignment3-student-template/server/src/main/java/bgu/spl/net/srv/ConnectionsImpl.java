@@ -1,6 +1,5 @@
 package bgu.spl.net.srv;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -85,11 +84,6 @@ public class ConnectionsImpl<T> implements Connections<T> {
                 channelSubscriptions.put(channel, new CopyOnWriteArrayList<>());
             }
             channelSubscriptions.get(channel).add(connectionID);
-
-
-            for (Integer conID : channelSubscriptions.get(channel)) {
-                System.out.println(conID + "IS SUBSCRIBED TO" + channel);
-            }
         }
     }
 
@@ -97,8 +91,6 @@ public class ConnectionsImpl<T> implements Connections<T> {
         synchronized (channelSubscriptions) {  /************************************** SYNCHRONIZED ****************/
             channelSubscriptions.get(channel).remove(Integer.valueOf(connectionID));
         }
-        System.out.println(channelSubscriptions.get(channel).isEmpty());
-
     }
 
     public int getMessageID() {
