@@ -79,10 +79,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if (user != null) {
             System.out.println(userName + " EXISTS, CHECKING IF HE PUT THE CORRECT PASSWORD");
             if (!user.getPassword().equals(password)) {
+                System.out.println("WRONG PASSWORD");
                 sendErrorFrame("Wrong password", "-1");
                 return;
             }
             if (user.isConnected()) {
+                System.out.println("USER IS ALREADY CONNECTED");
                 sendErrorFrame("User already logged in", "-1");
                 return;
             }
@@ -130,6 +132,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String destination = splitHeaderValue(msgLines[1]);
         String subscriptionID = splitHeaderValue(msgLines[2]);
         String receiptID = splitHeaderValue(msgLines[3]);
+
+        if(currentUser.isSubscribedTo(destination)) {
+            System.out.println("USER IS ALREADY SUBSCRIBED TO THIS CHANNEL");
+            sendErrorFrame(currentUser.getUserName() + " is already subscribed to channel: " + destination, receiptID);
+        }
 
         System.out.println(currentUser.getUserName() + " SUBSCRIBING TO " + destination);
 

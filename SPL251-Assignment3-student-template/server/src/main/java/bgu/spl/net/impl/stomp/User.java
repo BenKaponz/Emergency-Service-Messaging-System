@@ -52,6 +52,15 @@ public class User {
         return null;
     }
 
+    public boolean isSubscribedTo(String channel) {
+        for (String subbedChannel : subscribeIdToChannels.values()) {
+            if(subbedChannel.equals(channel)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     // SETTERS
     public void setConnectionId(int connectionId) {
         this.connectionId = connectionId;
