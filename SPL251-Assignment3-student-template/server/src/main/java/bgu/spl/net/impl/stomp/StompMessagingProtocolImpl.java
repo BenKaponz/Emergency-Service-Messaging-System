@@ -1,6 +1,5 @@
 package bgu.spl.net.impl.stomp;
 
-import java.util.List;
 import java.util.Map;
 
 import bgu.spl.net.api.StompMessagingProtocol;
@@ -116,8 +115,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         currentUser.disconnect();
         currentUser = null;
 
-        //connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
-        connections.send(connectionId, "bye");
+        connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
         connections.disconnect(connectionId);
 
         System.out.println( "DISCONNECTED SUCCESSFULLY!!!!!!!!");
@@ -136,6 +134,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if(currentUser.isSubscribedTo(destination)) {
             System.out.println("USER IS ALREADY SUBSCRIBED TO THIS CHANNEL");
             sendErrorFrame(currentUser.getUserName() + " is already subscribed to channel: " + destination, receiptID);
+            return;
         }
 
         System.out.println(currentUser.getUserName() + " SUBSCRIBING TO " + destination);
@@ -155,6 +154,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     private void handleUnsubscribe(String[] msgLines) {
         String subscriptionID = splitHeaderValue(msgLines[1]);
         String receiptID = splitHeaderValue(msgLines[2]);
+
+        if (!currentUser.isSubscribedWithId(subscriptionID)) {
+            sendErrorFrame("User isn't subscribed with this ID", receiptID);
+            return;
+        }
 
         String channel = currentUser.removeSub(subscriptionID);
 

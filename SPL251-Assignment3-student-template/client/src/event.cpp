@@ -8,13 +8,12 @@
 #include <sstream>
 #include <cstring>
 
-#include "../include/keyboardInput.h"
 
 using namespace std;
 using json = nlohmann::json;
 
-Event::Event(std::string channel_name, std::string city, std::string name, int date_time,
-             std::string description, std::map<std::string, std::string> general_information)
+Event::Event(string channel_name, string city, string name, int date_time,
+             string description, map<string, string> general_information)
     : channel_name(channel_name), city(city), name(name),
       date_time(date_time), description(description), general_information(general_information), eventOwnerUser("")
 {
@@ -24,25 +23,25 @@ Event::~Event()
 {
 }
 
-void Event::setEventOwnerUser(std::string setEventOwnerUser) {
+void Event::setEventOwnerUser(string setEventOwnerUser) {
     eventOwnerUser = setEventOwnerUser;
 }
 
-const std::string &Event::getEventOwnerUser() const {
+const string &Event::getEventOwnerUser() const {
     return eventOwnerUser;
 }
 
-const std::string &Event::get_channel_name() const
+const string &Event::get_channel_name() const
 {
     return this->channel_name;
 }
 
-const std::string &Event::get_city() const
+const string &Event::get_city() const
 {
     return this->city;
 }
 
-const std::string &Event::get_name() const
+const string &Event::get_name() const
 {
     return this->name;
 }
@@ -52,17 +51,17 @@ int Event::get_date_time() const
     return this->date_time;
 }
 
-const std::map<std::string, std::string> &Event::get_general_information() const
+const map<string, string> &Event::get_general_information() const
 {
     return this->general_information;
 }
 
-const std::string &Event::get_description() const
+const string &Event::get_description() const
 {
     return this->description;
 }
 
-Event::Event(const std::string &frame_body): channel_name(""), city(""), 
+Event::Event(const string &frame_body): channel_name(""), city(""), 
                                              name(""), date_time(0), description(""), general_information(),
                                              eventOwnerUser("")
 {
@@ -93,7 +92,7 @@ Event::Event(const std::string &frame_body): channel_name(""), city(""),
                 name = val;
             }
             else if(key == "date time") {
-                date_time = std::stoi(val);
+                date_time = stoi(val);
             }
             else if(key == "general information") {
                 inGeneralInformation = true;
@@ -114,22 +113,22 @@ Event::Event(const std::string &frame_body): channel_name(""), city(""),
     general_information = general_information_from_string;
 }
 
-names_and_events parseEventsFile(std::string json_path)
+names_and_events parseEventsFile(string json_path)
 {
-    std::ifstream f(json_path);
+    ifstream f(json_path);
     json data = json::parse(f);
 
-    std::string channel_name = data["channel_name"];
+    string channel_name = data["channel_name"];
 
     // run over all the events and convert them to Event objects
-    std::vector<Event> events;
+    vector<Event> events;
     for (auto &event : data["events"])
     {
-        std::string name = event["event_name"];
-        std::string city = event["city"];
+        string name = event["event_name"];
+        string city = event["city"];
         int date_time = event["date_time"];
-        std::string description = event["description"];
-        std::map<std::string, std::string> general_information;
+        string description = event["description"];
+        map<string, string> general_information;
         for (auto &update : event["general_information"].items())
         {
             if (update.value().is_string())
@@ -144,3 +143,12 @@ names_and_events parseEventsFile(std::string json_path)
 
     return events_and_names;
 }
+
+void Event::split_str(const string& line, char delimiter, vector<string>& lineArgs){
+    stringstream ss(line);
+    string curr;
+    while (getline(ss, curr, delimiter)) {
+        lineArgs.push_back(curr);
+    }
+}
+

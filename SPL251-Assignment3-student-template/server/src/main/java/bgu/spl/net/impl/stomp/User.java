@@ -39,6 +39,10 @@ public class User {
         this.subscribeIdToChannels.put(subscriptionID, channel);
     }
 
+    public boolean isSubscribedWithId(String subscriptionID) {
+        return subscribeIdToChannels.containsKey(subscriptionID);
+    }
+
     public String removeSub(String subscriptionID){
         return this.subscribeIdToChannels.remove(subscriptionID);
     }
