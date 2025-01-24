@@ -145,6 +145,7 @@ names_and_events parseEventsFile(string json_path)
     return events_and_names;
 }
 
+/*****************************************HELPER METHODS*******************************************/
 void Event::split_str(const string& line, char delimiter, vector<string>& lineArgs){
     stringstream ss(line);
     string curr;

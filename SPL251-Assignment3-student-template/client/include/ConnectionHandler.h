@@ -5,10 +5,11 @@
 #include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
+using namespace std;
 
 class ConnectionHandler {
 private:
-	const std::string host_;
+	const string host_;
 	const short port_;
 	boost::asio::io_service io_service_;   // Provides core I/O functionality
 	tcp::socket socket_;
@@ -18,13 +19,12 @@ private:
 public:
 	// ADDED
 	ConnectionHandler();
-	ConnectionHandler(std::string host, short port);
-	ConnectionHandler(const ConnectionHandler& other);
-	std::string getHost();
+	ConnectionHandler(string host, short port);
+	string getHost();
 	short getPort();
 	bool isConnected();
 	void disconnect();
-	bool sendSafe(const std::string &message);
+	bool sendSafe(const string &message);
 	// TO HERE
 
 	virtual ~ConnectionHandler();
@@ -42,19 +42,19 @@ public:
 
 	// Read an ascii line from the server
 	// Returns false in case connection closed before a newline can be read.
-	bool getLine(std::string &line);
+	bool getLine(string &line);
 
 	// Send an ascii line from the server
 	// Returns false in case connection closed before all the data is sent.
-	bool sendLine(std::string &line);
+	bool sendLine(string &line);
 
 	// Get Ascii data from the server until the delimiter character
 	// Returns false in case connection closed before null can be read.
-	bool getFrameAscii(std::string &frame, char delimiter);
+	bool getFrameAscii(string &frame, char delimiter);
 
 	// Send a message to the remote host.
 	// Returns false in case connection is closed before all the data is sent.
-	bool sendFrameAscii(const std::string &frame, char delimiter);
+	bool sendFrameAscii(const string &frame, char delimiter);
 
 	// Close down the connection properly.
 	void close();

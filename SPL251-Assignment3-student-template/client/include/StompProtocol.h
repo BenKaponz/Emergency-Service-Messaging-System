@@ -43,7 +43,7 @@ public:
     // יצירת סיכום לפי אירועים
     void createSummary(const string &channelName, const string &user, const string &file);
 
-    string makeConnectFrame(const string& host, const string& login, const string& passcode);
+    string makeConnectFrame(const string& login, const string& passcode);
     string makeDisconnectFrame(const string& recieptID);
     string makeSubscribeFrame(const string& destination, const string& subscriptionID, const string& receiptID);
     string makeUnsubscribeFrame(const string& subscriptionID, const string& receiptID);

@@ -2,6 +2,8 @@
 
 using boost::asio::ip::tcp;
 
+using namespace std;
+
 using std::cin;
 using std::cout;
 using std::cerr;
@@ -12,15 +14,13 @@ ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), por
                                                                 socket_(io_service_) {}
 // ADDED THIS EMPTY CONSTRUCTOR																
 ConnectionHandler::ConnectionHandler():host_(""), port_(0), io_service_(), socket_(io_service_),connected(false){}
-ConnectionHandler::ConnectionHandler(const ConnectionHandler &other) 
-    : host_(other.host_), port_(other.port_), io_service_(), socket_(io_service_), connected(other.connected) {}
 ConnectionHandler::~ConnectionHandler() {
 	close();
 }
 
 bool ConnectionHandler::connect() {
-	std::cout << "Starting connect to "
-	          << host_ << ":" << port_ << std::endl;
+	cout << "Starting connect to "
+	          << host_ << ":" << port_ << endl;
 	try {
 		tcp::endpoint endpoint(boost::asio::ip::address::from_string(host_), port_); // the server endpoint
 		boost::system::error_code error;
@@ -28,19 +28,21 @@ bool ConnectionHandler::connect() {
 		if (error)
 		// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 			connected = false;
+			//////////
 			throw boost::system::system_error(error);
 	}
-	catch (std::exception &e) {
-		std::cerr << "Connection failed (Error: " << e.what() << ')' << std::endl;
+	catch (exception &e) {
+		cerr << "Connection failed (Error: " << e.what() << ')' << endl;
 		return false;
 	}
 	//HEREEEEEEEEEEEEEEEEEEEEE
 	connected = true;
+	//////////////
 	return true;
 }
 
 // ALL OF THOSE:
-std::string ConnectionHandler::getHost() {
+string ConnectionHandler::getHost() {
     return host_;
 }
 
@@ -56,15 +58,15 @@ void ConnectionHandler::disconnect() {
     if (connected) {
         close();
         connected = false;
-        std::cout << "Disconnected from " << host_ << ":" << port_ << std::endl;
+        cout << "Disconnected from " << host_ << ":" << port_ << endl;
     } else {
-        std::cout << "Already disconnected." << std::endl;
+        cout << "Already disconnected." << endl;
     }
 }
 
-bool ConnectionHandler::sendSafe(const std::string &message) {
+bool ConnectionHandler::sendSafe(const string &message) {
     if (!isConnected()) {
-        std::cerr << "Cannot send message, not connected!" << std::endl;
+        cerr << "Cannot send message, not connected!" << endl;
         return false;
     }
     return sendFrameAscii(message, '\n');
@@ -81,8 +83,8 @@ bool ConnectionHandler::getBytes(char bytes[], unsigned int bytesToRead) {
 		}
 		if (error)
 			throw boost::system::system_error(error);
-	} catch (std::exception &e) {
-		std::cerr << "recv failed (Error: " << e.what() << ')' << std::endl;
+	} catch (exception &e) {
+		cerr << "recv failed (Error: " << e.what() << ')' << endl;
 		return false;
 	}
 	return true;
@@ -97,23 +99,23 @@ bool ConnectionHandler::sendBytes(const char bytes[], int bytesToWrite) {
 		}
 		if (error)
 			throw boost::system::system_error(error);
-	} catch (std::exception &e) {
-		std::cerr << "recv failed (Error: " << e.what() << ')' << std::endl;
+	} catch (exception &e) {
+		cerr << "recv failed (Error: " << e.what() << ')' << endl;
 		return false;
 	}
 	return true;
 }
 
-bool ConnectionHandler::getLine(std::string &line) {
+bool ConnectionHandler::getLine(string &line) {
 	return getFrameAscii(line, '\n');
 }
 
-bool ConnectionHandler::sendLine(std::string &line) {
+bool ConnectionHandler::sendLine(string &line) {
 	return sendFrameAscii(line, '\n');
 }
 
 
-bool ConnectionHandler::getFrameAscii(std::string &frame, char delimiter) {
+bool ConnectionHandler::getFrameAscii(string &frame, char delimiter) {
 	char ch;
 	// Stop when we encounter the null character.
 	// Notice that the null character is not appended to the frame string.
@@ -125,18 +127,19 @@ bool ConnectionHandler::getFrameAscii(std::string &frame, char delimiter) {
 			if (ch != '\0')
 				frame.append(1, ch);
 		} while (delimiter != ch);
-	} catch (std::exception &e) {
-		std::cerr << "recv failed2 (Error: " << e.what() << ')' << std::endl;
+	} catch (exception &e) {
+		cerr << "recv failed2 (Error: " << e.what() << ')' << endl;
 		return false;
 	}
 	return true;
 }
 
-bool ConnectionHandler::sendFrameAscii(const std::string &frame, char delimiter) {
+bool ConnectionHandler::sendFrameAscii(const string &frame, char delimiter) {
+	// WE WILL DELETE THIS.
 	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 	if (!this->isConnected())
 	{
-		std::cout<<"Diasconected from send fr4ame asc!!ii"<<std::endl;
+		cout<<"Diasconected from send fr4ame asc!!ii"<<endl;
 	}
 	//HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 	bool result = sendBytes(frame.c_str(), frame.length());
@@ -149,6 +152,6 @@ void ConnectionHandler::close() {
 	try {
 		socket_.close();
 	} catch (...) {
-		std::cout << "closing failed: connection already closed" << std::endl;
+		cout << "closing failed: connection already closed" << endl;
 	}
 }

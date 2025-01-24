@@ -26,9 +26,9 @@ string addHeader(const string& key, const string& value) {
 /************************************* FRAME MAKERS *******************************************************/
 
 // CONNNECT FRAME
-string StompProtocol::makeConnectFrame(const string& host, const string& login, const string& passcode) {
+string StompProtocol::makeConnectFrame(const string& login, const string& passcode) {
     string headers = addHeader("accept-version", "1.2");
-    headers += addHeader("host", host);
+    headers += addHeader("host", "stomp.cs.bgu.ac.il");
     headers += addHeader("login", login);
     headers += addHeader("passcode", passcode);
 
@@ -62,18 +62,18 @@ string StompProtocol::makeUnsubscribeFrame(const string& subscriptionID, const s
 // SEND FRAME
 string StompProtocol::makeSendFrame(const string& destination, Event eventToSend) {
     string headers = addHeader("destination", destination);
-    headers += "\n";
-    headers += addHeader("user", eventToSend.getEventOwnerUser());
-    headers += addHeader("city", eventToSend.get_city());
-    headers += addHeader("event name", eventToSend.get_name());
-    headers += addHeader("date time", to_string(eventToSend.get_date_time()));
-    headers += "general information:\n";
+    
+    string body = addHeader("user", eventToSend.getEventOwnerUser());
+    body += addHeader("city", eventToSend.get_city());
+    body += addHeader("event name", eventToSend.get_name());
+    body += addHeader("date time", to_string(eventToSend.get_date_time()));
+    body += "general information:\n";
 
     for (const auto& [key, value] : eventToSend.get_general_information()) {
-        headers += "    " + key + ": " + value + "\n";
+        body += "    " + key + ": " + value + "\n";
     }
 
-    string body = "description:\n" + eventToSend.get_description();
+    body = "description:\n" + eventToSend.get_description();
 
     return createFrameString("SEND", headers, body);
 }
