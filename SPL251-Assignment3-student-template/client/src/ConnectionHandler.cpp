@@ -10,7 +10,10 @@ using std::string;
 
 ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), port_(port), io_service_(),
                                                                 socket_(io_service_) {}
-
+// ADDED THIS EMPTY CONSTRUCTOR																
+ConnectionHandler::ConnectionHandler():host_(""), port_(0), io_service_(), socket_(io_service_),connected(false){}
+ConnectionHandler::ConnectionHandler(const ConnectionHandler &other) 
+    : host_(other.host_), port_(other.port_), io_service_(), socket_(io_service_), connected(other.connected) {}
 ConnectionHandler::~ConnectionHandler() {
 	close();
 }
@@ -23,14 +26,51 @@ bool ConnectionHandler::connect() {
 		boost::system::error_code error;
 		socket_.connect(endpoint, error);
 		if (error)
+		// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+			connected = false;
 			throw boost::system::system_error(error);
 	}
 	catch (std::exception &e) {
 		std::cerr << "Connection failed (Error: " << e.what() << ')' << std::endl;
 		return false;
 	}
+	//HEREEEEEEEEEEEEEEEEEEEEE
+	connected = true;
 	return true;
 }
+
+// ALL OF THOSE:
+std::string ConnectionHandler::getHost() {
+    return host_;
+}
+
+short ConnectionHandler::getPort() {
+    return port_;
+}
+
+bool ConnectionHandler::isConnected() {
+    return connected;
+}
+
+void ConnectionHandler::disconnect() {
+    if (connected) {
+        close();
+        connected = false;
+        std::cout << "Disconnected from " << host_ << ":" << port_ << std::endl;
+    } else {
+        std::cout << "Already disconnected." << std::endl;
+    }
+}
+
+bool ConnectionHandler::sendSafe(const std::string &message) {
+    if (!isConnected()) {
+        std::cerr << "Cannot send message, not connected!" << std::endl;
+        return false;
+    }
+    return sendFrameAscii(message, '\n');
+}
+
+// TO HERE
 
 bool ConnectionHandler::getBytes(char bytes[], unsigned int bytesToRead) {
 	size_t tmp = 0;
@@ -93,6 +133,12 @@ bool ConnectionHandler::getFrameAscii(std::string &frame, char delimiter) {
 }
 
 bool ConnectionHandler::sendFrameAscii(const std::string &frame, char delimiter) {
+	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+	if (!this->isConnected())
+	{
+		std::cout<<"Diasconected from send fr4ame asc!!ii"<<std::endl;
+	}
+	//HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 	bool result = sendBytes(frame.c_str(), frame.length());
 	if (!result) return false;
 	return sendBytes(&delimiter, 1);
