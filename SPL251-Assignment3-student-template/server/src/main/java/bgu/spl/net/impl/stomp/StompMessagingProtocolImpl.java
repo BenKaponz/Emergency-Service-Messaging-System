@@ -1,5 +1,8 @@
 package bgu.spl.net.impl.stomp;
 
+import java.util.List;
+import java.util.Map;
+
 import bgu.spl.net.api.StompMessagingProtocol;
 import bgu.spl.net.srv.Connections;
 import bgu.spl.net.srv.ConnectionsImpl;
@@ -30,7 +33,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             return;
         }
         if (currentUser == null) {
-            sendErrorFrame("Cannot preform the action because user is not connected");
+            sendErrorFrame("Cannot preform the action because user is not connected", "-1");
             return;
         }
         switch (command) {
@@ -45,9 +48,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                 break;    
             case "SEND":
                 handleSend(msgLines);
-                break;    
+                break;
             default:
-                sendErrorFrame("Invalid command: " + command);
+                sendErrorFrame("Invalid command: " + command, "-1");
         }
     }
 
@@ -68,7 +71,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         System.out.println(userName + " IS TRYING TO CONNECT TO THE SERVER");
 
         if (currentUser != null) {
-            sendErrorFrame("The client is already logged in, log out before trying again.");
+            sendErrorFrame("The client is already logged in, log out before trying again.", "-1");
             return;
         }
         User user = connections.getUser(userName);
@@ -76,11 +79,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         if (user != null) {
             System.out.println(userName + " EXISTS, CHECKING IF HE PUT THE CORRECT PASSWORD");
             if (!user.getPassword().equals(password)) {
-                sendErrorFrame("Wrong password");
+                sendErrorFrame("Wrong password", "-1");
                 return;
             }
             if (user.isConnected()) {
-                sendErrorFrame("User already logged in");
+                sendErrorFrame("User already logged in", "-1");
                 return;
             }
         }
@@ -131,7 +134,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         System.out.println(currentUser.getUserName() + " SUBSCRIBING TO " + destination);
 
         currentUser.addSub(destination, subscriptionID);
-        connections.subscribe(destination, connectionId);
+        connections.subscribe(destination, connectionId, currentUser);
         
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
 
@@ -163,13 +166,17 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String destination = splitHeaderValue(msgLines[1]);
         
         if (currentUser.getSubscriptionID(destination) == null) {
-            sendErrorFrame("User isn't subscribed to " + destination);
+            sendErrorFrame("User isn't subscribed to " + destination, "-1");
             return;
         }
 
+        Map<Integer, User> destSubscribers = connections.getSubsToChannel(destination);
+
         System.out.println(currentUser.getUserName() + " IS SENDING MESSAGES TO ALL THE CHICKS FROM " + destination + ". BE READY AND BRACE YOURSELF!");
         String body = getBodyMessage(msgLines);
-        String message = "MESSAGE\nsubscription: " + currentUser.getSubscriptionID(destination) 
+
+        for (User user : destSubscribers.values()) {
+            String message = "MESSAGE\nsubscription: " + user.getSubscriptionID(destination) 
                     + "\nmessage-id: " + connections.getMessageID()
                     + "\ndestination: " + destination
                     + "\n\n"
@@ -177,15 +184,16 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
                     + "\n"
                     ;
 
-        connections.send(destination, message);
+            connections.send(user.getConnectionId(), message);
+        }
 
         System.out.println("ALL THE CHICKS FROM " + destination +" HAVE RECIEVED SUCCESSFULLY THE MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!");
     }
     
-    public void sendErrorFrame(String msg) {
+    public void sendErrorFrame(String msg, String recieptID) {
         System.out.println("ERROR DETECTED - CALL THE POWERPUFF GIRLS!!!!!!!!!!!!!!!!!!!!!");
         
-        connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n");
+        connections.send(connectionId, "ERROR\nreceipt-id: " + recieptID + "\nmessage: " + msg + "\n\n");
         connections.disconnect(connectionId);
         shouldTerminate = true;
     }

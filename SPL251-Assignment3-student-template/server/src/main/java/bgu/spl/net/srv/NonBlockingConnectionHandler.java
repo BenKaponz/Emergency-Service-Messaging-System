@@ -9,6 +9,7 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
 
@@ -20,6 +21,9 @@ public class NonBlockingConnectionHandler<T> implements ConnectionHandler<T> {
     private final Queue<ByteBuffer> writeQueue = new ConcurrentLinkedQueue<>();
     private final SocketChannel chan;
     private final Reactor reactor;
+
+    private AtomicInteger connectionIdGenerator;  // HERE
+    private ConnectionsImpl<T> connectionsImpl; // HERE
 
     public NonBlockingConnectionHandler(
             MessageEncoderDecoder<T> reader,

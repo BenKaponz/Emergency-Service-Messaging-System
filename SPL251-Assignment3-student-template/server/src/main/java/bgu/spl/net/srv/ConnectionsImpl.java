@@ -1,18 +1,16 @@
 package bgu.spl.net.srv;
 
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import bgu.spl.net.impl.stomp.User;
 
 public class ConnectionsImpl<T> implements Connections<T> {
 
-    private final ConcurrentHashMap<Integer, ConnectionHandler<T>> activeConnections; // ConnectionID &
-                                                                                      // ConnectionHandler
-    private final ConcurrentHashMap<String, CopyOnWriteArrayList<Integer>> channelSubscriptions; // Topic & Subscribers
-    private final ConcurrentHashMap<String, User> allUsers; // Username & User
+    private final ConcurrentHashMap<Integer, ConnectionHandler<T>> activeConnections; // ConnectionID --> ConnectionHandler
+    private final ConcurrentHashMap<String, ConcurrentHashMap<Integer,User>> channelSubscriptions; // Channel --> List of subs (Users)
+    private final ConcurrentHashMap<String, User> allUsers; // Username --> User
     private AtomicInteger messageIDGen;
 
     private static class connectionsImplHolder {
@@ -47,10 +45,10 @@ public class ConnectionsImpl<T> implements Connections<T> {
     @Override
     public void send(String channel, T msg) {
         synchronized (channelSubscriptions) { /************************************** SYNCHRONIZED ****************/
-            List<Integer> subscribers = channelSubscriptions.get(channel);
-            if (subscribers != null) {
-                for (int connectionId : subscribers) {
-                    send(connectionId, msg);
+            ConcurrentHashMap<Integer,User> subscribersMap = channelSubscriptions.get(channel);
+            if (subscribersMap != null) {
+                for (User user : subscribersMap.values()) {
+                    send(user.getConnectionId(), msg);
                 }
             }
         }
@@ -61,8 +59,8 @@ public class ConnectionsImpl<T> implements Connections<T> {
         // Deleting from connectID-CH map
         activeConnections.remove(connectionId);
         // Delete from all subscribed channels
-        for (List<Integer> subscribers : channelSubscriptions.values()) {
-            subscribers.remove(Integer.valueOf(connectionId));
+        for (Map<Integer,User> subscribersMap : channelSubscriptions.values()) {
+            subscribersMap.remove(connectionId);
         }
     }
 
@@ -78,23 +76,28 @@ public class ConnectionsImpl<T> implements Connections<T> {
         allUsers.put(user.getUserName(), user);
     }
 
-    public void subscribe(String channel, int connectionID) {
+    public void subscribe(String channel, int connectionID, User user) {
         synchronized (channelSubscriptions) {  /************************************** SYNCHRONIZED ****************/
             if (!channelSubscriptions.containsKey(channel)) {
-                channelSubscriptions.put(channel, new CopyOnWriteArrayList<>());
+                channelSubscriptions.put(channel, new ConcurrentHashMap<Integer,User>());
             }
-            channelSubscriptions.get(channel).add(connectionID);
+            channelSubscriptions.get(channel).put(connectionID, user);
         }
     }
 
     public void unsubscribe(String channel, int connectionID) {
         synchronized (channelSubscriptions) {  /************************************** SYNCHRONIZED ****************/
-            channelSubscriptions.get(channel).remove(Integer.valueOf(connectionID));
+            channelSubscriptions.get(channel).remove(connectionID);
         }
     }
 
     public int getMessageID() {
         return this.messageIDGen.incrementAndGet();
+    }
+
+
+    public ConcurrentHashMap<Integer, User> getSubsToChannel(String channel) {
+        return channelSubscriptions.get(channel);
     }
 
 }
