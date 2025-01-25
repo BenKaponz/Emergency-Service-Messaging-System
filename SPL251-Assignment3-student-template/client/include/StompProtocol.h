@@ -69,7 +69,8 @@ public:
     void serverThreadLoop();
     int extractReceiptId(const string& frame);
     void disconnect();
-
+    Event createEvent(const string& frame);
+    
     //Helper method
     vector<string> splitString(const string &str, char delimiter); // פיצול מחרוזת
 };

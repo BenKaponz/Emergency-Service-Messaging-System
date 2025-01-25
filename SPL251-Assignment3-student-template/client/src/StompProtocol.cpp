@@ -380,8 +380,9 @@ void StompProtocol::serverThreadLoop() {
                     }
                 } else if (command == "ERROR") {
                     cout << "Error recieved from server:" << endl;
-                } else if (command == "MESSAGE"){
-
+                } else if (command == "MESSAGE") {
+                    Event event = createEvent(responseFromServer);
+                    saveEventForSummarize(event.get_channel_name(),event);
                 } else {
                     cout << "Unexpected frame received: " << command << endl;
                 }
@@ -431,4 +432,53 @@ void StompProtocol::disconnect() {
     summarizeMap.clear();
     
     cout << "Logged out successfully." << endl;
+}
+
+Event StompProtocol::createEvent(const string &frame) {
+    string channel_name, city, name, description;
+    int date_time = 0;
+    map<string, string> general_information;
+
+    // Split the frame into lines
+    vector<string> lines = splitString(frame, '\n');
+    bool isDescription = false; // To identify if we're processing the description
+
+    for (const string &line : lines) {
+        if (line.empty()) {
+            // Skip empty lines
+            continue;
+        }
+
+        if (line.find("destination:") == 0) {
+            // Extract channel name from destination
+            channel_name = line.substr(12); // Skip "destination:"
+        } else if (line.find("city:") == 0) {
+            city = line.substr(5); // Skip "city:"
+        } else if (line.find("event name:") == 0) {
+            name = line.substr(11); // Skip "event name:"
+        } else if (line.find("date time:") == 0) {
+            date_time = stoi(line.substr(10)); // Convert "date time:" value to integer
+        } else if (line.find("general information:") == 0) {
+            // Start parsing general information
+            isDescription = false; // Reset description flag
+        } else if (line.find("description:") == 0) {
+            isDescription = true; // Start parsing the description
+            description = line.substr(12); // Initialize description with the first line
+        } else if (isDescription) {
+            // Append to description
+            if (!description.empty()) {
+                description += "\n"; // Add newline for subsequent lines
+            }
+            description += line;
+        } else if (line.find(':') != string::npos) {
+            // Parse key-value pairs in general information
+            size_t delimiterPos = line.find(':');
+            string key = line.substr(0, delimiterPos);
+            string value = line.substr(delimiterPos + 1);
+            general_information[key] = value;
+        }
+    }
+
+    // Create and return the Event object
+    return Event(channel_name, city, name, date_time, description, general_information);
 }
