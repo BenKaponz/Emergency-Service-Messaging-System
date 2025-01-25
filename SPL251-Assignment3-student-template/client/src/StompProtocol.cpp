@@ -109,7 +109,7 @@ string StompProtocol::handleLogin(const string &hostPort, const string &username
     }
 
     string connectFrame =  makeConnectFrame(username, password);
-    currentUser = username;
+    tempUsername = username;
     cout << connectFrame << endl;
     return connectFrame;
 }
@@ -288,15 +288,15 @@ string StompProtocol:: epochToDate(time_t epochTime) {
 
 void StompProtocol::initiate() {
     // הפעלת לולאות הקלט והפלט
-    thread clientThread = thread([this]() { inputFromClientThreadLoop(); });
-    thread serverThread = thread([this]() { inputFromServerThreadLoop(); });
+    thread clientThread = thread([this]() {clientThreadLoop(); });
+    thread serverThread = thread([this]() {serverThreadLoop(); });
 
     // המתנה לסיום הלולאות
     clientThread.join();
     serverThread.join();
 }
 
-void StompProtocol::inputFromClientThreadLoop() {
+void StompProtocol::clientThreadLoop() {
     while (!shouldTerminate) {
         string line;
         getline(cin, line);
@@ -360,30 +360,30 @@ void StompProtocol::inputFromClientThreadLoop() {
 }
 
 
-void StompProtocol::inputFromServerThreadLoop() {
+void StompProtocol::serverThreadLoop() {
     
     while (!shouldTerminate) {
         string responseFromServer;
         if (connectionHandler != nullptr){
             if (connectionHandler->getFrameAscii(responseFromServer, '\0')) {
                 vector<string> tokens = splitString(responseFromServer, '\n');
-                string title = tokens[0];
+                string command = tokens[0];
 
-                if (title == "CONNECTED") {
+                if (command == "CONNECTED") {
                     isConnected = true;
+                    currentUser = tempUsername;
                     cout << "Successfuly logged in:" << endl;
-                } else if (title == "RECEIPT") {
+                } else if (command == "RECEIPT") {
                     int receiptId = extractReceiptId(responseFromServer);
-                    if (receiptId == -1) {
-                        cout << "RECEIPT frame received, but no valid receipt-id found:" << endl;
-                    }
-                    else if (receiptId == disconnectReceipt) {
+                    if (receiptId == disconnectReceipt) {
                         disconnect();
                     }
-                } else if (title == "ERROR") {
+                } else if (command == "ERROR") {
                     cout << "Error recieved from server:" << endl;
+                } else if (command == "MESSAGE"){
+
                 } else {
-                    cout << "Unexpected frame received: " << title << endl;
+                    cout << "Unexpected frame received: " << command << endl;
                 }
                 cout << responseFromServer << endl;
             } else {
@@ -420,10 +420,15 @@ int StompProtocol::extractReceiptId(const string &frame) {
 void StompProtocol::disconnect() {
     connectionHandler->close();
     connectionHandler = nullptr;
+    tempUsername = "";
     currentUser = "";
-    channelToSubscriptionId.clear();
     isConnected = false;
     subscriptionIDGenerator = 1;
     receiptIDGenerator = 1;
+    disconnectReceipt = -2;
+
+    channelToSubscriptionId.clear();
+    summarizeMap.clear();
+    
     cout << "Logged out successfully." << endl;
 }

@@ -125,13 +125,7 @@ bool ConnectionHandler::getFrameAscii(string &frame, char delimiter) {
 }
 
 bool ConnectionHandler::sendFrameAscii(const string &frame, char delimiter) {
-	// WE WILL DELETE THIS.
-	// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-	if (!this->isConnected())
-	{
-		cout<<"Diasconected from send fr4ame asc!!ii"<<endl;
-	}
-	//HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+	
 	bool result = sendBytes(frame.c_str(), frame.length());
 	if (!result) return false;
 	return sendBytes(&delimiter, 1);

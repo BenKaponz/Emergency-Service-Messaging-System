@@ -14,16 +14,16 @@ class StompProtocol {
 private:
 
     ConnectionHandler *connectionHandler;   
+    string tempUsername;
     string currentUser;                        
     bool isConnected;                         
     
-    int subscriptionIDGenerator;                 // מזהה ההרשמה הבא לערוץ
-    int receiptIDGenerator;                      // מזהה ה-receipt הבא
+    int subscriptionIDGenerator;                 
+    int receiptIDGenerator;                      
 
     int disconnectReceipt;                      
 
     map<string, map<string, vector <Event>>> summarizeMap;      // USER ---->> (CHANNEL, vector of CORESSPONDING EVENTS)
-    //map<int, bool> receipts;                // מעקב אחר receipts שהתקבלו
     map<string, int> channelToSubscriptionId; // Channel --> SubscriptionID
 
     mutex summarizeMapMutex; 
@@ -65,8 +65,8 @@ public:
     // void processServerMessage(const string &message); // עיבוד הודעת טקסט מהשרת
 
     void initiate();
-    void inputFromClientThreadLoop();
-    void inputFromServerThreadLoop();
+    void clientThreadLoop();
+    void serverThreadLoop();
     int extractReceiptId(const string& frame);
     void disconnect();
 
