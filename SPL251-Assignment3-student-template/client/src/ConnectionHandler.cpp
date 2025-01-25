@@ -37,6 +37,9 @@ bool ConnectionHandler::connect() {
 bool ConnectionHandler::getBytes(char bytes[], unsigned int bytesToRead) {
 	size_t tmp = 0;
 	boost::system::error_code error;
+	if (!socket_.is_open()) {
+		return false;
+	}
 	try {
 		while (!error && bytesToRead > tmp) {
 			tmp += socket_.read_some(boost::asio::buffer(bytes + tmp, bytesToRead - tmp), error);
@@ -79,6 +82,7 @@ bool ConnectionHandler::getFrameAscii(string &frame, char delimiter) {
 	char ch;
 	// Stop when we encounter the null character.
 	// Notice that the null character is not appended to the frame string.
+	
 	try {
 		do {
 			if (!getBytes(&ch, 1)) {

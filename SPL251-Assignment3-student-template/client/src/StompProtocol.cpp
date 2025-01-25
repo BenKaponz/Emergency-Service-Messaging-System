@@ -336,7 +336,6 @@ void StompProtocol::clientThreadLoop() {
         getline(cin, line);
         vector<string> tokens = splitString(line, ' ');
         string frameToSend;
-
         if (tokens.empty()) continue;
 
         try {
