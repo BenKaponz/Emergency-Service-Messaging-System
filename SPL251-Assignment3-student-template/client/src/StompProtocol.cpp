@@ -8,17 +8,41 @@
 #include <fstream>
 
 
+StompProtocol::~StompProtocol() {
+    // בדוק אם ה-ConnectionHandler לא ריק
+    if (connectionHandler != nullptr) {
+        // סגור את החיבור בצורה בטוחה
+        connectionHandler->close();
+        // שחרר את הזיכרון של ה-ConnectionHandler
+        delete connectionHandler;
+        connectionHandler = nullptr;
+    }
+
+    // אפס את הדגלים כדי לוודא שאין גישה לא חוקית
+    isConnected = false;
+    shouldTerminate = true;
+
+    // ניקוי המפות (למרות ש-C++ עושה זאת אוטומטית)
+    summarizeMap.clear();
+    channelToSubscriptionId.clear();
+
+    // אין צורך לנקות משתנים פשוטים כמו `int` או `string`,
+    // כי הם משתחררים אוטומטית.
+}
 
 StompProtocol::StompProtocol(ConnectionHandler *connectionHandler)
-    : connectionHandler(connectionHandler), 
-      tempUsername(""), 
-      currentUser(""), 
-      isConnected(false), 
-      subscriptionIDGenerator(1), 
-      receiptIDGenerator(1), 
-      disconnectReceipt(-2), 
-      shouldTerminate(false) {}
-
+    : connectionHandler(connectionHandler),        // אתחול מצביע ל-ConnectionHandler
+      tempUsername(""),                            // אתחול שם משתמש זמני
+      currentUser(""),                             // אתחול שם משתמש נוכחי
+      isConnected(false),                          // משתמש לא מחובר בהתחלה
+      subscriptionIDGenerator(1),                  // מזהה מנוי מתחיל מ-1
+      receiptIDGenerator(1),                       // מזהה Receipt מתחיל מ-1
+      disconnectReceipt(-2),                       // מזהה Receipt של התנתקות
+      summarizeMap(),                              // אתחול המפה הפנימית
+      channelToSubscriptionId(),                   // אתחול מפה לערוצים ומנויים
+      summarizeMapMutex(),                         // אתחול mutex
+      shouldTerminate(false)                       // הדגל לסיום מוגדר כ-False
+{}
 /********************************* HELPER METHODS ********************************************************/
 string StompProtocol::createFrameString(const string &command, const string &headers, const string &body)
 {
@@ -31,7 +55,7 @@ string StompProtocol::createFrameString(const string &command, const string &hea
     return frame;
 }
 
-string addHeader(const string& key, const string& value) {
+string StompProtocol::addHeader(const string& key, const string& value) {
     return key + ":" + value + "\n";
 }
 
@@ -122,7 +146,6 @@ string StompProtocol::handleLogin(const string &hostPort, const string &username
 
     string connectFrame =  makeConnectFrame(username, password);
     tempUsername = username;
-    cout << connectFrame << endl;
     return connectFrame;
 }
 
@@ -202,11 +225,10 @@ string StompProtocol::handleReport(const string& file) {
         string sendFrame = makeSendFrame(channelName, eventToSend);
         connectionHandler->sendFrameAscii(sendFrame, '\0');
     }
-    return "NotEmpty";
+    return "";
 }
 
 void StompProtocol::saveEventForSummarize(const string& channelName, const Event& event) {
-
     if (summarizeMap.find(currentUser) == summarizeMap.end()) {
         summarizeMap[currentUser] = map<string, vector<Event>>();
     }
@@ -218,14 +240,14 @@ void StompProtocol::saveEventForSummarize(const string& channelName, const Event
 
 void StompProtocol::createSummary(const string &channelName, const string &user, const string &file) {
     lock_guard<mutex> lock(summarizeMapMutex);
-    if (summarizeMap.find(channelName) == summarizeMap.end()) {
-        cout << "Can't summarize, the given channel isn't exist" << endl;
-        return;
-    }
-    if (summarizeMap[channelName].find(user) == summarizeMap[channelName].end()) {
-        cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel" << endl;
-        return;
-    }
+    // if (summarizeMap.find(channelName) == summarizeMap.end()) {
+    //     cout << "Can't summarize, the given channel isn't exist" << endl;
+    //     return;
+    // }
+    // if (summarizeMap[channelName].find(user) == summarizeMap[channelName].end()) {
+    //     cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel" << endl;
+    //     return;
+    // }
 
     vector<Event> &events = summarizeMap[channelName][user];
 
@@ -399,8 +421,7 @@ void StompProtocol::serverThreadLoop() {
                     cout << "Unexpected frame received: " << command << endl;
                 }
                 cout << responseFromServer << endl;
-            } else {
-                cout << "Failed to receive response from server." << endl;
+
             }
         }
         
@@ -463,7 +484,7 @@ Event StompProtocol::createEvent(const string &frame) {
 
         if (line.find("destination:") == 0) {
             // Extract channel name from destination
-            channel_name = line.substr(12); // Skip "destination:"
+            channel_name = line.substr(13); // Skip "destination:"
         } else if (line.find("city:") == 0) {
             city = line.substr(5); // Skip "city:"
         } else if (line.find("event name:") == 0) {
@@ -493,4 +514,14 @@ Event StompProtocol::createEvent(const string &frame) {
 
     // Create and return the Event object
     return Event(channel_name, city, name, date_time, description, general_information);
+}
+
+vector<string> StompProtocol::splitString(const string &str, char delimiter) {
+    vector<string> tokens;
+    string token;
+    istringstream tokenStream(str);
+    while (getline(tokenStream, token, delimiter)) {
+        tokens.push_back(token);
+    }
+    return tokens;
 }

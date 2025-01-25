@@ -206,7 +206,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         
         connections.send(connectionId, "ERROR\nreceipt-id: " + recieptID + "\nmessage: " + msg + "\n\n");
         connections.disconnect(connectionId);
-        shouldTerminate = true;
     }
 
     private String getBodyMessage(String[] msgLines) {

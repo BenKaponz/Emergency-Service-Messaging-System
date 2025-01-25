@@ -19,8 +19,6 @@ ConnectionHandler::~ConnectionHandler() {
 }
 
 bool ConnectionHandler::connect() {
-	cout << "Starting connect to "
-	          << host_ << ":" << port_ << endl;
 	try {
 		tcp::endpoint endpoint(boost::asio::ip::address::from_string(host_), port_); // the server endpoint
 		boost::system::error_code error;
@@ -35,34 +33,6 @@ bool ConnectionHandler::connect() {
 	return true;
 }
 
-// ALL OF THOSE:
-string ConnectionHandler::getHost() {
-    return host_;
-}
-
-short ConnectionHandler::getPort() {
-    return port_;
-}
-
-void ConnectionHandler::disconnect() {
-    if (connected) {
-        close();
-        connected = false;
-        cout << "Disconnected from " << host_ << ":" << port_ << endl;
-    } else {
-        cout << "Already disconnected." << endl;
-    }
-}
-
-bool ConnectionHandler::sendSafe(const string &message) {
-    if (!isConnected()) {
-        cerr << "Cannot send message, not connected!" << endl;
-        return false;
-    }
-    return sendFrameAscii(message, '\n');
-}
-
-// TO HERE
 
 bool ConnectionHandler::getBytes(char bytes[], unsigned int bytesToRead) {
 	size_t tmp = 0;
@@ -139,3 +109,5 @@ void ConnectionHandler::close() {
 		cout << "closing failed: connection already closed" << endl;
 	}
 }
+
+
