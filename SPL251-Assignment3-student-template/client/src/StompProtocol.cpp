@@ -171,6 +171,13 @@ string StompProtocol::handleReport(const string& file) {
 
     names_and_events jsonData = parseEventsFile(file);
     const string &channelName = jsonData.channel_name;
+
+       // Check if the channelName exists in the map
+    if (channelToSubscriptionId.find(channelName) == channelToSubscriptionId.end()) {
+        cout << "User cannot report because he is not subscribed to the channel: " << channelName << endl;
+        return "";
+    }
+
     vector<Event> &events = jsonData.events;
     
     if (events.empty()) {
@@ -195,6 +202,85 @@ void StompProtocol::saveEventForSummarize(const string& channelName, const Event
         summarizeMap[currentUser][channelName] = vector<Event>();
     }
     summarizeMap[currentUser][channelName].push_back(event);
+}
+
+void StompProtocol::createSummary(const string &channelName, const string &user, const string &file) {
+    lock_guard<mutex> lock(summarizeMapMutex);
+    if (summarizeMap.find(channelName) == summarizeMap.end()) {
+        cout << "Can't summarize, the given channel isn't exist" << endl;
+        return;
+    }
+    if (summarizeMap[channelName].find(user) == summarizeMap[channelName].end()) {
+        cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel" << endl;
+        return;
+    }
+
+    vector<Event> &events = summarizeMap[channelName][user];
+
+    // Sorting first by date time then by name.
+    sort(events.begin(), events.end(), [](const Event &a, const Event &b) {
+        if (a.get_date_time() != b.get_date_time()) {
+            return a.get_date_time() < b.get_date_time();
+        }
+        return a.get_name() < b.get_name();
+    });
+
+    // Calculating stats.
+    int activeCount = 0;
+    int forcesArrivalCount = 0;
+    for (const auto &ev : events) {
+        if (ev.get_general_information().at("active") == "true") {
+            activeCount++;
+        }
+        if (ev.get_general_information().at("forces_arrival_at_scene") == "true") {
+            forcesArrivalCount++;
+        }
+    }
+
+    // Creating file if isn't existing.
+    ofstream outFile(file, ios::trunc);
+    if (!outFile.is_open()) {
+        cout << "Error: Could not open or create the file: " << file << endl;
+        return;
+    }
+    
+    // Writing the summary to the file
+    outFile << "Channel: " << channelName << endl;
+    outFile << "Stats:" << endl;
+    outFile << "Total: " << events.size() << endl;
+    outFile << "active: " << activeCount << endl;
+    outFile << "forces arrival at scene: " << forcesArrivalCount << "\n" << endl;
+    outFile << "Event Reports:" << endl;
+
+    // Writing all reports.
+    int reportNumber = 1;
+    for (const auto &ev : events) {
+        outFile << "Report_" << reportNumber << ":" << endl;
+        outFile << "   city: " << ev.get_city() << endl;
+        // המרת זמן מ-epoch לפורמט קריא
+        time_t epochTime = static_cast<time_t>(ev.get_date_time());
+        outFile << "   date time: " << epochToDate(epochTime) << endl;
+        outFile << "   event name: " << ev.get_name() << endl;
+        // יצירת תקציר לתיאור
+        string descriptionSummary = ev.get_description();
+        if (descriptionSummary.length() > 27) {
+            descriptionSummary = descriptionSummary.substr(0, 27) + "...";
+        }
+        outFile << "   summary: " << descriptionSummary << endl;
+        reportNumber++;
+    }
+    outFile.close();
+    cout << "Summary created successfully in file: " << file << endl;
+}
+
+string StompProtocol:: epochToDate(time_t epochTime) {
+    struct tm *timeInfo = localtime(&epochTime);
+
+    // יצירת מחרוזת בפורמט הנדרש
+    char buffer[20];
+    strftime(buffer, sizeof(buffer), "%d/%m/%y %H:%M", timeInfo);
+
+    return string(buffer);
 }
 
 /************************************************ITAY*****************************************************/
