@@ -105,8 +105,8 @@ string StompProtocol::makeSendFrame(const string& destination, Event eventToSend
     body += addHeader("date time", to_string(eventToSend.get_date_time()));
     body += "general information:\n";
 
-    for (const auto& [key, value] : eventToSend.get_general_information()) {
-        body += "    " + key + ": " + value + "\n";
+    for (const auto &pair : eventToSend.get_general_information()) {
+        body += "    " + pair.first + ": " + pair.second + "\n";
     }
 
     body = "description:\n" + eventToSend.get_description();
