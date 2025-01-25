@@ -99,17 +99,17 @@ string StompProtocol::makeUnsubscribeFrame(const string& subscriptionID, const s
 string StompProtocol::makeSendFrame(const string& destination, Event eventToSend) {
     string headers = addHeader("destination", destination);
     
-    string body = addHeader("user", eventToSend.getEventOwnerUser());
-    body += addHeader("city", eventToSend.get_city());
-    body += addHeader("event name", eventToSend.get_name());
-    body += addHeader("date time", to_string(eventToSend.get_date_time()));
+    string body = addHeader("user", " " + eventToSend.getEventOwnerUser());
+    body += addHeader("city", " " + eventToSend.get_city());
+    body += addHeader("event name", " " + eventToSend.get_name());
+    body += addHeader("date time", " " + to_string(eventToSend.get_date_time()));
     body += "general information:\n";
 
     for (const auto &pair : eventToSend.get_general_information()) {
         body += "    " + pair.first + ": " + pair.second + "\n";
     }
 
-    body = "description:\n" + eventToSend.get_description();
+    body += "description:\n" + eventToSend.get_description();
 
     return createFrameString("SEND", headers, body);
 }
@@ -240,6 +240,7 @@ void StompProtocol::saveEventForSummarize(const string& channelName, const Event
 
 void StompProtocol::createSummary(const string &channelName, const string &user, const string &file) {
     lock_guard<mutex> lock(summarizeMapMutex);
+
     // if (summarizeMap.find(channelName) == summarizeMap.end()) {
     //     cout << "Can't summarize, the given channel isn't exist" << endl;
     //     return;
@@ -248,8 +249,13 @@ void StompProtocol::createSummary(const string &channelName, const string &user,
     //     cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel" << endl;
     //     return;
     // }
+    
+
+    
 
     vector<Event> &events = summarizeMap[channelName][user];
+    cout << events.size() << endl;
+
 
     // Sorting first by date time then by name.
     sort(events.begin(), events.end(), [](const Event &a, const Event &b) {
@@ -285,6 +291,7 @@ void StompProtocol::createSummary(const string &channelName, const string &user,
     outFile << "active: " << activeCount << endl;
     outFile << "forces arrival at scene: " << forcesArrivalCount << "\n" << endl;
     outFile << "Event Reports:" << endl;
+
 
     // Writing all reports.
     int reportNumber = 1;
@@ -416,6 +423,7 @@ void StompProtocol::serverThreadLoop() {
                 } else if (command == "MESSAGE") {
                     Event event = createEvent(responseFromServer);
                     saveEventForSummarize(event.get_channel_name(),event);
+                    cout << event.get_channel_name() << endl;
                 } else {
                     cout << "Unexpected frame received: " << command << endl;
                 }
@@ -510,6 +518,7 @@ Event StompProtocol::createEvent(const string &frame) {
             general_information[key] = value;
         }
     }
+
 
     // Create and return the Event object
     return Event(channel_name, city, name, date_time, description, general_information);
