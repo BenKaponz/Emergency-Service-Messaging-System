@@ -7,6 +7,18 @@
 #include <filesystem>
 #include <fstream>
 
+
+
+StompProtocol::StompProtocol(ConnectionHandler *connectionHandler)
+    : connectionHandler(connectionHandler), 
+      tempUsername(""), 
+      currentUser(""), 
+      isConnected(false), 
+      subscriptionIDGenerator(1), 
+      receiptIDGenerator(1), 
+      disconnectReceipt(-2), 
+      shouldTerminate(false) {}
+
 /********************************* HELPER METHODS ********************************************************/
 string StompProtocol::createFrameString(const string &command, const string &headers, const string &body)
 {
