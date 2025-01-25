@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <mutex>
+#include "event.h"
 
 using namespace std;
 
@@ -12,17 +13,24 @@ class StompProtocol {
 
 private:
 
-    ConnectionHandler *connectionHandler;   // ניהול חיבור לשרת
-    string username;                        // שם המשתמש המחובר
-    bool isConnected;                         // סטטוס החיבור
-    map<string, int> channelToSubscriptionId; // ניהול ערוצים (Channel --> SubscriptionID)
+    ConnectionHandler *connectionHandler;   
+    string currentUser;                        
+    bool isConnected;                         
+    
     int subscriptionIDGenerator;                 // מזהה ההרשמה הבא לערוץ
     int receiptIDGenerator;                      // מזהה ה-receipt הבא
-    map<int, bool> receipts;                // מעקב אחר receipts שהתקבלו
+
+    int disconnectReceipt;                      
+
+    map<string, map<string, vector <Event>>> summarizeMap;      // USER ---->> (CHANNEL, vector of CORESSPONDING EVENTS)
+    //map<int, bool> receipts;                // מעקב אחר receipts שהתקבלו
+    map<string, int> channelToSubscriptionId; // Channel --> SubscriptionID
 
     mutex protocolMutex; // מנעול לסינכרון בין תהליכים
+    bool shouldTerminate;
 
-    // פונקציית עזר ליצירת מחרוזת של Frame
+
+    // HELPER METHODS 
     string createFrameString(const string &command, const string &headers, const string &body = "");
     string addHeader(const string& key, const string& value);
 
@@ -35,12 +43,14 @@ public:
     StompProtocol& operator= (const StompProtocol&) = delete;
 
     // פונקציות עיבוד פקודות משתמש
-    string handleLogin(const string &hostPort, const string &username, const string &password); // מחזירה Frame של CONNECT
-    string handleLogout();                                                                      // מחזירה Frame של DISCONNECT
-    string handleJoin(const string &topic);                                                     // מחזירה Frame של SUBSCRIBE
-    string handleExit(const string &topic);                                                     // מחזירה Frame של UNSUBSCRIBE
-    void handleReport(const string &filepath);
-    // יצירת סיכום לפי אירועים
+    string handleLogin(const string &hostPort, const string &username, const string &password); 
+    string handleLogout();                                                                      
+    string handleJoin(const string &topic);                                                     
+    string handleExit(const string &topic);    
+
+    string handleReport(const string &filepath);
+    void saveEventForSummarize(const string& channelName, const Event& event);
+    
     void createSummary(const string &channelName, const string &user, const string &file);
 
     string makeConnectFrame(const string& login, const string& passcode);
@@ -49,16 +59,15 @@ public:
     string makeUnsubscribeFrame(const string& subscriptionID, const string& receiptID);
     string makeSendFrame(const string& destination, Event eventToSend);
 
-    // טיפול בתגובות מהשרת
-    void processServerMessage(const string &message); // עיבוד הודעת טקסט מהשרת
+    // // טיפול בתגובות מהשרת
+    // void processServerMessage(const string &message); // עיבוד הודעת טקסט מהשרת
 
-    // שליחת הודעה לשרת
-    bool sendFrame(const string &frame); // שליחת מחרוזת Frame לשרת
+    void initiate();
+    void inputFromClientThreadLoop();
+    void inputFromServerThreadLoop();
+    int extractReceiptId(const string& frame);
+    void disconnect();
 
-    // לולאות קלט וקריאה
-    void keyboardLoop(); // לולאת קלט של המשתמש
-    void readLoop();     // לולאת קריאה של תשובות מהשרת
-
-    // פונקציות עזר
+    //Helper method
     vector<string> splitString(const string &str, char delimiter); // פיצול מחרוזת
 };

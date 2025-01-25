@@ -13,7 +13,7 @@ using std::string;
 ConnectionHandler::ConnectionHandler(string host, short port) : host_(host), port_(port), io_service_(),
                                                                 socket_(io_service_) {}
 // ADDED THIS EMPTY CONSTRUCTOR																
-ConnectionHandler::ConnectionHandler():host_(""), port_(0), io_service_(), socket_(io_service_),connected(false){}
+ConnectionHandler::ConnectionHandler():host_(""), port_(0), io_service_(), socket_(io_service_){}
 ConnectionHandler::~ConnectionHandler() {
 	close();
 }
@@ -26,18 +26,12 @@ bool ConnectionHandler::connect() {
 		boost::system::error_code error;
 		socket_.connect(endpoint, error);
 		if (error)
-		// HEREEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
-			connected = false;
-			//////////
 			throw boost::system::system_error(error);
 	}
 	catch (exception &e) {
 		cerr << "Connection failed (Error: " << e.what() << ')' << endl;
 		return false;
 	}
-	//HEREEEEEEEEEEEEEEEEEEEEE
-	connected = true;
-	//////////////
 	return true;
 }
 
@@ -48,10 +42,6 @@ string ConnectionHandler::getHost() {
 
 short ConnectionHandler::getPort() {
     return port_;
-}
-
-bool ConnectionHandler::isConnected() {
-    return connected;
 }
 
 void ConnectionHandler::disconnect() {
