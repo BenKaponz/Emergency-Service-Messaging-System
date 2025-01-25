@@ -287,7 +287,7 @@ string StompProtocol:: epochToDate(time_t epochTime) {
 
 
 void StompProtocol::initiate() {
-    // הפעלת לולאות הקלט והפלט
+    // הפעלת לולאות הקלט והפלטs
     thread clientThread = thread([this]() {clientThreadLoop(); });
     thread serverThread = thread([this]() {serverThreadLoop(); });
 
