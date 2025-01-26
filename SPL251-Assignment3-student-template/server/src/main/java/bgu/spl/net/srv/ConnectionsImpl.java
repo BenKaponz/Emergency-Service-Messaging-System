@@ -64,6 +64,10 @@ public class ConnectionsImpl<T> implements Connections<T> {
         }
     }
 
+    public ConnectionHandler<T> getConnectionHandler(int id) {
+        return activeConnections.get(id);
+    }
+
     public void connect(int connectionId, ConnectionHandler<T> handler) {
         activeConnections.put(connectionId, handler);
     }

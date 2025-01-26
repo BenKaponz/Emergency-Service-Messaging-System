@@ -107,6 +107,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
         connections.disconnect(connectionId);
+        
     }
 
     /************************************
@@ -177,9 +178,19 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
     }
     
-    public void sendErrorFrame(String msg, String recieptID) {        
-        connections.send(connectionId, "ERROR\nreceipt-id: " + recieptID + "\nmessage: " + msg + "\n\n");
+    public void sendErrorFrame(String msg, String recieptID) {
+        if(recieptID == "-1") {
+            connections.send(connectionId, "ERROR\nmessage: " + msg + "\n\n");
+        } else {
+            connections.send(connectionId, "ERROR\nreceipt-id: " + recieptID + "\nmessage: " + msg + "\n\n");
+        }
+        
         connections.disconnect(connectionId);
+        if (currentUser != null) {
+            currentUser.disconnect();
+            currentUser = null;
+        }
+
     }
 
     private String getBodyMessage(String[] msgLines) {

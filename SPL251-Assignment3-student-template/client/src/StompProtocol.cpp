@@ -214,10 +214,10 @@ string StompProtocol::handleReport(const string& file) {
     const string &channelName = jsonData.channel_name;
 
        // Check if the channelName exists in the map
-    if (channelToSubscriptionId.find(channelName) == channelToSubscriptionId.end()) {
-        cout << "User cannot report because he is not subscribed to the channel: " << channelName << endl;
-        return "";
-    }
+    // if (channelToSubscriptionId.find(channelName) == channelToSubscriptionId.end()) {
+    //     cout << "User cannot report because he is not subscribed to the channel: " << channelName << endl;
+    //     return "";
+    // }
 
     vector<Event> &events = jsonData.events;
     
@@ -227,7 +227,7 @@ string StompProtocol::handleReport(const string& file) {
 
     for (auto &eventToSend : events) {
         eventToSend.setEventOwnerUser(currentUser);
-        saveEventForSummarize(channelName, eventToSend);
+        //saveEventForSummarize(channelName, eventToSend);
         string sendFrame = makeSendFrame(channelName, eventToSend);
         connectionHandler->sendFrameAscii(sendFrame, '\0');
     }
@@ -235,6 +235,7 @@ string StompProtocol::handleReport(const string& file) {
 }
 
 void StompProtocol::saveEventForSummarize(const string& channelName, const Event& event) {
+    lock_guard<mutex> lock(summarizeMapMutex);
     if (summarizeMap.find(event.getEventOwnerUser()) == summarizeMap.end()) {
         summarizeMap[event.getEventOwnerUser()] = map<string, vector<Event>>();
     }
@@ -257,10 +258,11 @@ void StompProtocol::createSummary(const string &channelName, const string &user,
     }
     lock_guard<mutex> lock(summarizeMapMutex);
     
-    if (summarizeMap.find(user) == summarizeMap.end()) {
-        cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel"<< endl;
-        return;
-    }
+    // if (summarizeMap.find(user) == summarizeMap.end()) {
+    //     cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel"<< endl;
+    //     return;
+    // }
+    
     if (summarizeMap[user].find(channelName) == summarizeMap[channelName].end()) {
         cout << "Can't summarize, the given channel isn't exist" << endl;
         return;
@@ -433,9 +435,9 @@ void StompProtocol::serverThreadLoop() {
                     disconnect();
                 } else if (command == "MESSAGE") {
                     Event event = createEvent(responseFromServer);
-                    if(event.getEventOwnerUser() != currentUser) {
+                    //if(event.getEventOwnerUser() != currentUser) {
                         saveEventForSummarize(event.get_channel_name() ,event);
-                    }  
+                    //  
                 } else {
                     cout << "Unexpected frame received: " << command << endl;
                 }
