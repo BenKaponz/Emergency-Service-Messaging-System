@@ -213,12 +213,6 @@ string StompProtocol::handleReport(const string& file) {
     names_and_events jsonData = parseEventsFile(file);
     const string &channelName = jsonData.channel_name;
 
-       // Check if the channelName exists in the map
-    // if (channelToSubscriptionId.find(channelName) == channelToSubscriptionId.end()) {
-    //     cout << "User cannot report because he is not subscribed to the channel: " << channelName << endl;
-    //     return "";
-    // }
-
     vector<Event> &events = jsonData.events;
     
     if (events.empty()) {
@@ -262,7 +256,7 @@ void StompProtocol::createSummary(const string &channelName, const string &user,
     //     cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel"<< endl;
     //     return;
     // }
-    
+
     if (summarizeMap[user].find(channelName) == summarizeMap[channelName].end()) {
         cout << "Can't summarize, the given channel isn't exist" << endl;
         return;
@@ -310,11 +304,11 @@ void StompProtocol::createSummary(const string &channelName, const string &user,
     for (const auto &ev : events) {
         outFile << "Report_" << reportNumber << ":" << endl;
         outFile << "   city: " << ev.get_city() << endl;
-        // המרת זמן מ-epoch לפורמט קריא
+
         time_t epochTime = static_cast<time_t>(ev.get_date_time());
         outFile << "   date time: " << epochToDate(epochTime) << endl;
         outFile << "   event name: " << ev.get_name() << endl;
-        // יצירת תקציר לתיאור
+        
         string descriptionSummary = ev.get_description();
         if (descriptionSummary.length() > 27) {
             descriptionSummary = descriptionSummary.substr(0, 27) + "...";
@@ -329,22 +323,20 @@ void StompProtocol::createSummary(const string &channelName, const string &user,
 string StompProtocol:: epochToDate(time_t epochTime) {
     struct tm *timeInfo = localtime(&epochTime);
 
-    // יצירת מחרוזת בפורמט הנדרש
+    
     char buffer[20];
     strftime(buffer, sizeof(buffer), "%d/%m/%y %H:%M", timeInfo);
 
     return string(buffer);
 }
 
-/************************************************ITAY*****************************************************/
+
 
 
 void StompProtocol::initiate() {
-    // הפעלת לולאות הקלט והפלטs
     thread clientThread = thread([this]() {clientThreadLoop(); });
     // thread serverThread = thread([this]() {serverThreadLoop(); });
 
-    // המתנה לסיום הלולאות
     clientThread.join();
     //serverThread.join();
 }
@@ -450,14 +442,11 @@ void StompProtocol::serverThreadLoop() {
 }
 
 int StompProtocol::extractReceiptId(const string &frame) {
-    // חפש את receipt-id בתוך ה-frame
     size_t receiptPos = frame.find("receipt-id:");
     if (receiptPos != string::npos) {
-        // חשב את תחילת הערך של ה-receipt-id
         size_t start = receiptPos + string("receipt-id:").length();
-        size_t end = frame.find('\n', start); // חפש את סוף השורה
+        size_t end = frame.find('\n', start); 
 
-        // אם הצלחנו למצוא את הסוף, נחזיר את ה-receipt-id כ-integer
         if (end != string::npos) {
             try {
                 return stoi(frame.substr(start, end - start));
@@ -468,7 +457,6 @@ int StompProtocol::extractReceiptId(const string &frame) {
             }
         }
     }
-    // במקרה שלא מצאנו או היה שגיאה, נחזיר -1
     return -1;
 }
 
