@@ -23,8 +23,8 @@ public class Reactor<T> implements Server<T> {
     private Thread selectorThread;
     private final ConcurrentLinkedQueue<Runnable> selectorTasks = new ConcurrentLinkedQueue<>();
 
-    private AtomicInteger connectionIdGenerator;  // HERE
-    private ConnectionsImpl<T> connectionsImpl;     // HERE
+    private AtomicInteger connectionIdGenerator;  
+    private ConnectionsImpl<T> connectionsImpl;     
 
     public Reactor(
             int numThreads,
@@ -37,8 +37,8 @@ public class Reactor<T> implements Server<T> {
         this.protocolFactory = protocolFactory;
         this.readerFactory = readerFactory;
 
-        this.connectionIdGenerator = new AtomicInteger(1);  // HERE
-        connectionsImpl = ConnectionsImpl.getInstance(); // HERE
+        this.connectionIdGenerator = new AtomicInteger(1);  
+        connectionsImpl = ConnectionsImpl.getInstance(); 
     }
 
     @Override
@@ -101,19 +101,19 @@ public class Reactor<T> implements Server<T> {
     private void handleAccept(ServerSocketChannel serverChan, Selector selector) throws IOException {
         SocketChannel clientChan = serverChan.accept();
 
-        int connectionID = connectionIdGenerator.getAndIncrement(); // HERE
-        MessagingProtocol<T> newProtocol = protocolFactory.get();   // HERE
-        newProtocol.start(connectionID, connectionsImpl);           // HERE
+        int connectionID = connectionIdGenerator.getAndIncrement(); 
+        MessagingProtocol<T> newProtocol = protocolFactory.get();   
+        newProtocol.start(connectionID, connectionsImpl);           
 
         clientChan.configureBlocking(false);
         final NonBlockingConnectionHandler<T> handler = new NonBlockingConnectionHandler<>(
                 readerFactory.get(),
-                newProtocol,    // HERE
+                newProtocol,   
                 clientChan,    
                 this);
 
         clientChan.register(selector, SelectionKey.OP_READ, handler);
-        connectionsImpl.connect(connectionID, handler);  // HERE
+        connectionsImpl.connect(connectionID, handler);  
     }
 
     private void handleReadWrite(SelectionKey key) {

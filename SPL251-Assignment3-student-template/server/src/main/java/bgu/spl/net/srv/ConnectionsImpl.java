@@ -31,7 +31,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
     @Override
     public boolean send(int connectionId, T msg) {
-        synchronized (activeConnections) { /************************************** SYNCHRONIZED ****************/
+        synchronized (activeConnections) { 
             ConnectionHandler<T> handler = activeConnections.get(connectionId);
             if (handler != null) {
                 handler.send(msg);
@@ -44,7 +44,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
 
     @Override
     public void send(String channel, T msg) {
-        synchronized (channelSubscriptions) { /************************************** SYNCHRONIZED ****************/
+        synchronized (channelSubscriptions) { 
             ConcurrentHashMap<Integer,User> subscribersMap = channelSubscriptions.get(channel);
             if (subscribersMap != null) {
                 for (User user : subscribersMap.values()) {
@@ -81,7 +81,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
     }
 
     public void subscribe(String channel, int connectionID, User user) {
-        synchronized (channelSubscriptions) {  /************************************** SYNCHRONIZED ****************/
+        synchronized (channelSubscriptions) {  
             if (!channelSubscriptions.containsKey(channel)) {
                 channelSubscriptions.put(channel, new ConcurrentHashMap<Integer,User>());
             }
@@ -90,7 +90,7 @@ public class ConnectionsImpl<T> implements Connections<T> {
     }
 
     public void unsubscribe(String channel, int connectionID) {
-        synchronized (channelSubscriptions) {  /************************************** SYNCHRONIZED ****************/
+        synchronized (channelSubscriptions) {  
             channelSubscriptions.get(channel).remove(connectionID);
         }
     }

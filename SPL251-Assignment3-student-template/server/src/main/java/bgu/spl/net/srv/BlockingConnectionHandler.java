@@ -59,7 +59,7 @@ public class BlockingConnectionHandler<T> implements Runnable, ConnectionHandler
     @Override
     public void send(T msg) {
         try {
-                if (msg != null) { // Probably a useless check
+                if (msg != null) { 
                     out.write(encdec.encode(msg));
                     out.flush();
                 }

@@ -15,8 +15,8 @@ public abstract class BaseServer<T> implements Server<T> {
     private final Supplier<MessageEncoderDecoder<T>> encdecFactory;
     private ServerSocket sock;
 
-    private AtomicInteger connectionIdGenerator;  // HERE
-    private ConnectionsImpl<T> connectionsImpl; // HERE
+    private AtomicInteger connectionIdGenerator;  
+    private ConnectionsImpl<T> connectionsImpl; 
 
     public BaseServer(
             int port,
@@ -27,8 +27,8 @@ public abstract class BaseServer<T> implements Server<T> {
         this.protocolFactory = protocolFactory;
         this.encdecFactory = encdecFactory;
 		this.sock = null;
-        this.connectionIdGenerator = new AtomicInteger(1);  // HERE
-        connectionsImpl = ConnectionsImpl.getInstance(); // HERE
+        this.connectionIdGenerator = new AtomicInteger(1);  
+        connectionsImpl = ConnectionsImpl.getInstance(); 
     }
 
     @Override
@@ -43,17 +43,17 @@ public abstract class BaseServer<T> implements Server<T> {
 
                 Socket clientSock = serverSock.accept();
         
-                int connectionID = connectionIdGenerator.getAndIncrement(); // HERE
-                MessagingProtocol<T> newProtocol = protocolFactory.get();   // HERE
-                newProtocol.start(connectionID, connectionsImpl);           // HERE
+                int connectionID = connectionIdGenerator.getAndIncrement(); 
+                MessagingProtocol<T> newProtocol = protocolFactory.get();   
+                newProtocol.start(connectionID, connectionsImpl);           
 
                 BlockingConnectionHandler<T> handler = new BlockingConnectionHandler<>(
                         clientSock, 
                         encdecFactory.get(),
-                        newProtocol);   //HERE
+                        newProtocol);   
 
                 execute(handler);
-                connectionsImpl.connect(connectionID, handler); // HERE
+                connectionsImpl.connect(connectionID, handler); 
             }
         } catch (IOException ex) {
         }
