@@ -25,7 +25,8 @@ private:
 
     map<string, map<string, vector <Event>>> summarizeMap;      // USER ---->> (CHANNEL, vector of CORESSPONDING EVENTS)
     map<string, int> channelToSubscriptionId; // Channel --> SubscriptionID
-
+    map<int, string> recieptIDtoAction; 
+    mutex recieptIDtoActionMutex; 
     mutex summarizeMapMutex; 
     bool shouldTerminate;
 

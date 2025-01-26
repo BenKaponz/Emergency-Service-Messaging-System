@@ -9,7 +9,7 @@ public class StompServer {
             System.out.println("Usage: java StompServer <port> <reactor/tpc>");
             return;
         }
-
+        
         int port;
         try {
             port = Integer.parseInt(args[0]);
@@ -38,19 +38,3 @@ public class StompServer {
         }
     }
 }
-
-// public static void main(String[] args) {
-        
-//     Server.threadPerClient(
-//             7777, // port
-//             () -> new StompMessagingProtocolImpl(), // protocol factory
-//             StompMessageEncoderDecoder::new // message encoder decoder factory
-//     ).serve();
-
-//     Server.reactor(
-//     Runtime.getRuntime().availableProcessors(),
-//     7777, //port
-//     () -> new StompMessagingProtocolImpl(), //protocol factory
-//     StompMessageEncoderDecoder::new //message encoder decoder factory
-//     ).serve();
-// }

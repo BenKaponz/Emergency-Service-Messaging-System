@@ -9,39 +9,33 @@
 
 
 StompProtocol::~StompProtocol() {
-    // בדוק אם ה-ConnectionHandler לא ריק
     if (connectionHandler != nullptr) {
-        // סגור את החיבור בצורה בטוחה
         connectionHandler->close();
-        // שחרר את הזיכרון של ה-ConnectionHandler
         delete connectionHandler;
         connectionHandler = nullptr;
     }
 
-    // אפס את הדגלים כדי לוודא שאין גישה לא חוקית
     isConnected = false;
     shouldTerminate = true;
 
-    // ניקוי המפות (למרות ש-C++ עושה זאת אוטומטית)
     summarizeMap.clear();
     channelToSubscriptionId.clear();
-
-    // אין צורך לנקות משתנים פשוטים כמו `int` או `string`,
-    // כי הם משתחררים אוטומטית.
 }
 
 StompProtocol::StompProtocol(ConnectionHandler *connectionHandler)
-    : connectionHandler(connectionHandler),        // אתחול מצביע ל-ConnectionHandler
-      tempUsername(""),                            // אתחול שם משתמש זמני
-      currentUser(""),                             // אתחול שם משתמש נוכחי
-      isConnected(false),                          // משתמש לא מחובר בהתחלה
-      subscriptionIDGenerator(1),                  // מזהה מנוי מתחיל מ-1
-      receiptIDGenerator(1),                       // מזהה Receipt מתחיל מ-1
-      disconnectReceipt(-2),                       // מזהה Receipt של התנתקות
-      summarizeMap(),                              // אתחול המפה הפנימית
-      channelToSubscriptionId(),                   // אתחול מפה לערוצים ומנויים
-      summarizeMapMutex(),                         // אתחול mutex
-      shouldTerminate(false)                       // הדגל לסיום מוגדר כ-False
+    : connectionHandler(connectionHandler),        
+      tempUsername(""),                           
+      currentUser(""),                             
+      isConnected(false),                          
+      subscriptionIDGenerator(1),                  
+      receiptIDGenerator(1),                       
+      disconnectReceipt(-2),                       
+      summarizeMap(),                              
+      channelToSubscriptionId(),
+      recieptIDtoAction(),
+      recieptIDtoActionMutex(),                   
+      summarizeMapMutex(),                         
+      shouldTerminate(false)                       
 {}
 /********************************* HELPER METHODS ********************************************************/
 string StompProtocol::createFrameString(const string &command, const string &headers, const string &body)
@@ -120,9 +114,11 @@ string StompProtocol::makeSendFrame(const string& destination, Event eventToSend
 string StompProtocol::handleLogin(const string &hostPort, const string &username, const string &password) {
 
     if (isConnected) {
-        cout << "You are already logged in, log out before trying again." << endl;
+        cout << "The client is already logged in, log out before trying again." << endl;
         return "";
     }
+
+
 
     size_t colonPos = hostPort.find(':');
     if (colonPos == string::npos) {
@@ -176,6 +172,8 @@ string StompProtocol::handleJoin(const string &topic) {
         return "";
     }
 
+    lock_guard<mutex> lock(recieptIDtoActionMutex);
+    recieptIDtoAction[receiptIDGenerator] = "Joined channel " + topic;
     channelToSubscriptionId[topic] = subscriptionIDGenerator;
     string subscribeFrame = makeSubscribeFrame(topic, to_string(subscriptionIDGenerator), to_string(receiptIDGenerator));
     receiptIDGenerator++;
@@ -188,11 +186,17 @@ string StompProtocol::handleJoin(const string &topic) {
 string StompProtocol::handleExit(const string &topic) {
 
     if (!isConnected) {
-        cout << "User is not logged in, log in before trying to exit " + topic << endl;
+        cout << "User is not logged in, log in before trying to exit from: " + topic << endl;
         return "";
     }
 
-
+    if (channelToSubscriptionId.find(topic) == channelToSubscriptionId.end()) {
+        cout << "User is not subbed to: " + topic << endl;
+        return "";
+    }
+    
+    lock_guard<mutex> lock(recieptIDtoActionMutex);
+    recieptIDtoAction[receiptIDGenerator] = "Exited channel " + topic;
     int subscriptionIDforTopic = channelToSubscriptionId[topic];
     string unsubscribeFrame = makeUnsubscribeFrame(to_string(subscriptionIDforTopic), to_string(receiptIDGenerator));
     receiptIDGenerator++;
@@ -221,7 +225,7 @@ string StompProtocol::handleReport(const string& file) {
 
     for (auto &eventToSend : events) {
         eventToSend.setEventOwnerUser(currentUser);
-        //saveEventForSummarize(channelName, eventToSend);
+        saveEventForSummarize(channelName, eventToSend);
         string sendFrame = makeSendFrame(channelName, eventToSend);
         connectionHandler->sendFrameAscii(sendFrame, '\0');
     }
@@ -412,28 +416,32 @@ void StompProtocol::serverThreadLoop() {
             if (connectionHandler->getFrameAscii(responseFromServer, '\0')) {
                 vector<string> tokens = splitString(responseFromServer, '\n');
                 string command = tokens[0];
-
                 if (command == "CONNECTED") {
                     isConnected = true;
                     currentUser = tempUsername;
-                    cout << "Successfuly logged in:" << endl;
+                    cout << "Login successful" << endl;
                 } else if (command == "RECEIPT") {
                     int receiptId = extractReceiptId(responseFromServer);
                     if (receiptId == disconnectReceipt) {
                         disconnect();
+                    } else {
+                        lock_guard<mutex> lock(recieptIDtoActionMutex);
+                        if (recieptIDtoAction.find(receiptId) != recieptIDtoAction.end()) {
+                            cout << recieptIDtoAction[receiptId] << endl;
+                        }
                     }
                 } else if (command == "ERROR") {
                     cout << "Error recieved from server:" << endl;
                     disconnect();
                 } else if (command == "MESSAGE") {
                     Event event = createEvent(responseFromServer);
-                    //if(event.getEventOwnerUser() != currentUser) {
+                    if(event.getEventOwnerUser() != currentUser) {
                         saveEventForSummarize(event.get_channel_name() ,event);
-                    //  
+                    }  
                 } else {
                     cout << "Unexpected frame received: " << command << endl;
                 }
-                cout << responseFromServer << endl;
+                // cout << responseFromServer << endl;
 
             }
         }
