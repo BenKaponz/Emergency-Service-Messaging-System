@@ -442,7 +442,6 @@ void StompProtocol::serverThreadLoop() {
                     cout << "Unexpected frame received: " << command << endl;
                 }
                 // cout << responseFromServer << endl;
-
             }
         }
         

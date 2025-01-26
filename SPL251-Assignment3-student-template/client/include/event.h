@@ -36,7 +36,6 @@ public:
     const string &get_name() const;
     int get_date_time() const;
     const std::map<std::string, std::string> &get_general_information() const; 
-    // HEREEEEEEEEEEEEEEEEEEEEEEEE
     void split_str(const std::string& str, char delimiter, std::vector<std::string>& result);
 };
 

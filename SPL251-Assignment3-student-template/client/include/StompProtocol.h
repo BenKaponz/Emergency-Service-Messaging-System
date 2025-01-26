@@ -37,13 +37,11 @@ private:
 
 public:
 
-    // Rule of 5.
     StompProtocol(ConnectionHandler *connectionHandler);
     ~StompProtocol();
     StompProtocol(const StompProtocol&) = delete;
     StompProtocol& operator= (const StompProtocol&) = delete;
 
-    // פונקציות עיבוד פקודות משתמש
     string handleLogin(const string &hostPort, const string &username, const string &password); 
     string handleLogout();                                                                      
     string handleJoin(const string &topic);                                                     
@@ -62,9 +60,6 @@ public:
     string makeUnsubscribeFrame(const string& subscriptionID, const string& receiptID);
     string makeSendFrame(const string& destination, Event eventToSend);
 
-    // // טיפול בתגובות מהשרת
-    // void processServerMessage(const string &message); // עיבוד הודעת טקסט מהשרת
-
     void initiate();
     void clientThreadLoop();
     void serverThreadLoop();
@@ -73,5 +68,5 @@ public:
     Event createEvent(const string& frame);
     
     //Helper method
-    vector<string> splitString(const string &str, char delimiter); // פיצול מחרוזת
+    vector<string> splitString(const string &str, char delimiter); 
 };

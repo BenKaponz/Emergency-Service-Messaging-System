@@ -15,10 +15,8 @@ private:
 	tcp::socket socket_;
 
 public:
-	// ADDED
 	ConnectionHandler();
 	ConnectionHandler(string host, short port);
-	// TO HERE
 
 	virtual ~ConnectionHandler();
 
