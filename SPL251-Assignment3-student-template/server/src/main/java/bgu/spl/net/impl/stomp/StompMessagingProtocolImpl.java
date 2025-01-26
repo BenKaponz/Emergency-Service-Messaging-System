@@ -24,6 +24,7 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
     @Override
     public void process(String message) {
         // Spliting msg
+        System.out.println(message);
         String[] msgLines = message.split("\n");
         String command = msgLines[0];
 
@@ -67,8 +68,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String userName = splitHeaderValue(msgLines[3]);
         String password = splitHeaderValue(msgLines[4]);
 
-        System.out.println(userName + " IS TRYING TO CONNECT TO THE SERVER");
-
         if (currentUser != null) {
             sendErrorFrame("The client is already logged in, log out before trying again.", "-1");
             return;
@@ -76,21 +75,16 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         User user = connections.getUser(userName);
         // User never got created
         if (user != null) {
-            System.out.println(userName + " EXISTS, CHECKING IF HE PUT THE CORRECT PASSWORD");
             if (!user.getPassword().equals(password)) {
-                System.out.println("WRONG PASSWORD");
                 sendErrorFrame("Wrong password", "-1");
                 return;
             }
             if (user.isConnected()) {
-                System.out.println("USER IS ALREADY CONNECTED");
                 sendErrorFrame("User already logged in", "-1");
                 return;
             }
         }
         if (user == null) {
-            System.out.println(userName + " NOT EXISTS, CREATING A NEW ONE");
-
             user = new User(userName, password);
             connections.addUser(user);
         }
@@ -99,16 +93,12 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         user.setConnectionId(connectionId);
 
         connections.send(connectionId, "CONNECTED\nversion:1.2\n\n");
-
-        System.out.println(userName + " CONNECTED SUCCESSFULLY!!!!!!!!");
     }
 
     /************************************
      * DISCONNECT
      **************************************/
     private void handleDisconnect(String[] msgLines) {
-
-        System.out.println(currentUser.getUserName() + " IS TRYING TO DISCONNECT FROM THE SERVER");
 
         // Extract required header and send rececipt.
         String receiptID = splitHeaderValue(msgLines[1]);
@@ -117,10 +107,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
         connections.disconnect(connectionId);
-
-        System.out.println( "DISCONNECTED SUCCESSFULLY!!!!!!!!");
-
-        
     }
 
     /************************************
@@ -132,19 +118,14 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         String receiptID = splitHeaderValue(msgLines[3]);
 
         if(currentUser.isSubscribedTo(destination)) {
-            System.out.println("USER IS ALREADY SUBSCRIBED TO THIS CHANNEL");
             sendErrorFrame(currentUser.getUserName() + " is already subscribed to channel: " + destination, receiptID);
             return;
         }
-
-        System.out.println(currentUser.getUserName() + " SUBSCRIBING TO " + destination);
 
         currentUser.addSub(destination, subscriptionID);
         connections.subscribe(destination, connectionId, currentUser);
         
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
-
-        System.out.println(currentUser.getUserName() + " SUCCESSFULLY SUBSCRIBED TO " + destination +"!!!!!!!!!!!!!!!!!!");
 
     }
 
@@ -162,12 +143,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         String channel = currentUser.removeSub(subscriptionID);
 
-        System.out.println(currentUser.getUserName() + " UNSUBSCRIBING FROM " + channel);
-
         connections.unsubscribe(channel, connectionId);
         connections.send(connectionId, "RECEIPT\nreceipt-id:" + receiptID + "\n\n");
 
-        System.out.println(currentUser.getUserName() +" SUCCESSFULLY UNSUBSCRIBED FROM " + channel + "!!!!!!!!!!!!!!!!!!");
     }
 
     /************************************
@@ -183,7 +161,6 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
 
         Map<Integer, User> destSubscribers = connections.getSubsToChannel(destination);
 
-        System.out.println(currentUser.getUserName() + " IS SENDING MESSAGES TO ALL THE CHICKS FROM " + destination + ". BE READY AND BRACE YOURSELF!");
         String body = getBodyMessage(msgLines);
 
         for (User user : destSubscribers.values()) {
@@ -198,12 +175,9 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
             connections.send(user.getConnectionId(), message);
         }
 
-        System.out.println("ALL THE CHICKS FROM " + destination +" HAVE RECIEVED SUCCESSFULLY THE MESSAGE!!!!!!!!!!!!!!!!!!!!!!!!");
     }
     
-    public void sendErrorFrame(String msg, String recieptID) {
-        System.out.println("ERROR DETECTED - CALL THE POWERPUFF GIRLS!!!!!!!!!!!!!!!!!!!!!");
-        
+    public void sendErrorFrame(String msg, String recieptID) {        
         connections.send(connectionId, "ERROR\nreceipt-id: " + recieptID + "\nmessage: " + msg + "\n\n");
         connections.disconnect(connectionId);
     }

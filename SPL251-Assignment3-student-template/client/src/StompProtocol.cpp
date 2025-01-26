@@ -106,7 +106,7 @@ string StompProtocol::makeSendFrame(const string& destination, Event eventToSend
     body += "general information:\n";
 
     for (const auto &pair : eventToSend.get_general_information()) {
-        body += "    " + pair.first + ": " + pair.second + "\n";
+        body += /*"     " +*/ pair.first + ": " + pair.second + "\n";
     }
 
     body += "description:\n" + eventToSend.get_description();
@@ -143,6 +143,10 @@ string StompProtocol::handleLogin(const string &hostPort, const string &username
         cout << "Couldn't connect to server" << endl;
         return "";
     }
+    
+    shouldTerminate = false;
+    thread serverThread = thread([this]() {serverThreadLoop(); });
+    serverThread.detach();
 
     string connectFrame =  makeConnectFrame(username, password);
     tempUsername = username;
@@ -188,10 +192,12 @@ string StompProtocol::handleExit(const string &topic) {
         return "";
     }
 
+
     int subscriptionIDforTopic = channelToSubscriptionId[topic];
     string unsubscribeFrame = makeUnsubscribeFrame(to_string(subscriptionIDforTopic), to_string(receiptIDGenerator));
     receiptIDGenerator++;
-    subscriptionIDGenerator++;
+
+    channelToSubscriptionId.erase(topic);
 
     return unsubscribeFrame;
 }             
@@ -229,34 +235,38 @@ string StompProtocol::handleReport(const string& file) {
 }
 
 void StompProtocol::saveEventForSummarize(const string& channelName, const Event& event) {
-    if (summarizeMap.find(currentUser) == summarizeMap.end()) {
-        summarizeMap[currentUser] = map<string, vector<Event>>();
+    if (summarizeMap.find(event.getEventOwnerUser()) == summarizeMap.end()) {
+        summarizeMap[event.getEventOwnerUser()] = map<string, vector<Event>>();
     }
-    if (summarizeMap[currentUser].find(channelName) == summarizeMap[currentUser].end()){
-        summarizeMap[currentUser][channelName] = vector<Event>();
+    if (summarizeMap[event.getEventOwnerUser()].find(channelName) == summarizeMap[event.getEventOwnerUser()].end()){
+        summarizeMap[event.getEventOwnerUser()][channelName] = vector<Event>();
     }
-    summarizeMap[currentUser][channelName].push_back(event);
+    summarizeMap[event.getEventOwnerUser()][channelName].push_back(event);
 }
 
 void StompProtocol::createSummary(const string &channelName, const string &user, const string &file) {
+
+
+    if (!isConnected)  {
+        cout << "User is not logged in, log in before trying to create a summary" << endl;
+        return;
+    }
+    if (channelToSubscriptionId.find(channelName) == channelToSubscriptionId.end()) {
+        cout << "User cannot create a summary because he is not subscribed to the channel: " << channelName << endl;
+        return;
+    }
     lock_guard<mutex> lock(summarizeMapMutex);
-
-    // if (summarizeMap.find(channelName) == summarizeMap.end()) {
-    //     cout << "Can't summarize, the given channel isn't exist" << endl;
-    //     return;
-    // }
-    // if (summarizeMap[channelName].find(user) == summarizeMap[channelName].end()) {
-    //     cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel" << endl;
-    //     return;
-    // }
     
-
+    if (summarizeMap.find(user) == summarizeMap.end()) {
+        cout << "Can't summarize, the given user isn't didn't send any message relative to the given channel"<< endl;
+        return;
+    }
+    if (summarizeMap[user].find(channelName) == summarizeMap[channelName].end()) {
+        cout << "Can't summarize, the given channel isn't exist" << endl;
+        return;
+    }
     
-
-    vector<Event> &events = summarizeMap[channelName][user];
-    cout << events.size() << endl;
-
-
+    vector<Event> &events = summarizeMap[user][channelName];
     // Sorting first by date time then by name.
     sort(events.begin(), events.end(), [](const Event &a, const Event &b) {
         if (a.get_date_time() != b.get_date_time()) {
@@ -330,15 +340,15 @@ string StompProtocol:: epochToDate(time_t epochTime) {
 void StompProtocol::initiate() {
     // הפעלת לולאות הקלט והפלטs
     thread clientThread = thread([this]() {clientThreadLoop(); });
-    thread serverThread = thread([this]() {serverThreadLoop(); });
+    // thread serverThread = thread([this]() {serverThreadLoop(); });
 
     // המתנה לסיום הלולאות
     clientThread.join();
-    serverThread.join();
+    //serverThread.join();
 }
 
 void StompProtocol::clientThreadLoop() {
-    while (!shouldTerminate) {
+    while (true) {
         string line;
         getline(cin, line);
         vector<string> tokens = splitString(line, ' ');
@@ -381,6 +391,7 @@ void StompProtocol::clientThreadLoop() {
                     continue;
                 }
                 createSummary(tokens[1], tokens[2], tokens[3]);
+                continue;
             } else {
                 cout << "Unknown command" << endl;
                 continue;
@@ -401,7 +412,6 @@ void StompProtocol::clientThreadLoop() {
 
 
 void StompProtocol::serverThreadLoop() {
-    
     while (!shouldTerminate) {
         string responseFromServer;
         if (connectionHandler != nullptr){
@@ -420,10 +430,12 @@ void StompProtocol::serverThreadLoop() {
                     }
                 } else if (command == "ERROR") {
                     cout << "Error recieved from server:" << endl;
+                    disconnect();
                 } else if (command == "MESSAGE") {
                     Event event = createEvent(responseFromServer);
-                    saveEventForSummarize(event.get_channel_name(),event);
-                    cout << event.get_channel_name() << endl;
+                    if(event.getEventOwnerUser() != currentUser) {
+                        saveEventForSummarize(event.get_channel_name() ,event);
+                    }  
                 } else {
                     cout << "Unexpected frame received: " << command << endl;
                 }
@@ -467,6 +479,7 @@ void StompProtocol::disconnect() {
     subscriptionIDGenerator = 1;
     receiptIDGenerator = 1;
     disconnectReceipt = -2;
+    shouldTerminate = true;
 
     channelToSubscriptionId.clear();
     summarizeMap.clear();
@@ -483,6 +496,8 @@ Event StompProtocol::createEvent(const string &frame) {
     vector<string> lines = splitString(frame, '\n');
     bool isDescription = false; // To identify if we're processing the description
 
+    string username;
+
     for (const string &line : lines) {
         if (line.empty()) {
             // Skip empty lines
@@ -492,10 +507,12 @@ Event StompProtocol::createEvent(const string &frame) {
         if (line.find("destination:") == 0) {
             // Extract channel name from destination
             channel_name = line.substr(13); // Skip "destination:"
+        } else if (line.find("user:") == 0){
+            username = line.substr(6);
         } else if (line.find("city:") == 0) {
-            city = line.substr(5); // Skip "city:"
+            city = line.substr(6); // Skip "city:"
         } else if (line.find("event name:") == 0) {
-            name = line.substr(11); // Skip "event name:"
+            name = line.substr(12); // Skip "event name:"
         } else if (line.find("date time:") == 0) {
             date_time = stoi(line.substr(10)); // Convert "date time:" value to integer
         } else if (line.find("general information:") == 0) {
@@ -510,18 +527,21 @@ Event StompProtocol::createEvent(const string &frame) {
                 description += "\n"; // Add newline for subsequent lines
             }
             description += line;
+        } else if(line.find("subscription:") == 0 || line.find("message-id:") == 0){
+            continue;
         } else if (line.find(':') != string::npos) {
             // Parse key-value pairs in general information
             size_t delimiterPos = line.find(':');
             string key = line.substr(0, delimiterPos);
-            string value = line.substr(delimiterPos + 1);
+            string value = line.substr(delimiterPos + 2);
             general_information[key] = value;
         }
     }
 
-
     // Create and return the Event object
-    return Event(channel_name, city, name, date_time, description, general_information);
+    Event event = Event(channel_name, city, name, date_time, description, general_information);
+    event.setEventOwnerUser(username);
+    return event;
 }
 
 vector<string> StompProtocol::splitString(const string &str, char delimiter) {

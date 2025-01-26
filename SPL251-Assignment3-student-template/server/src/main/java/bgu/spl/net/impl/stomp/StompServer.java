@@ -9,17 +9,17 @@ public class StompServer {
 
     public static void main(String[] args) {
         
-        Server.threadPerClient(
-                7777, // port
-                () -> new StompMessagingProtocolImpl(), // protocol factory
-                StompMessageEncoderDecoder::new // message encoder decoder factory
-        ).serve();
-
-        // Server.reactor(
-        // Runtime.getRuntime().availableProcessors(),
-        // 7777, //port
-        // () -> new StompMessagingProtocolImpl(), //protocol factory
-        // StompMessageEncoderDecoder::new //message encoder decoder factory
+        // Server.threadPerClient(
+        //         7777, // port
+        //         () -> new StompMessagingProtocolImpl(), // protocol factory
+        //         StompMessageEncoderDecoder::new // message encoder decoder factory
         // ).serve();
+
+        Server.reactor(
+        Runtime.getRuntime().availableProcessors(),
+        7777, //port
+        () -> new StompMessagingProtocolImpl(), //protocol factory
+        StompMessageEncoderDecoder::new //message encoder decoder factory
+        ).serve();
     }
 }
