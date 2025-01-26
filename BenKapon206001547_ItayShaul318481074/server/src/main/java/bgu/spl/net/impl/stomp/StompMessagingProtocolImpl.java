@@ -185,16 +185,11 @@ public class StompMessagingProtocolImpl implements StompMessagingProtocol<String
         } else {
             connections.send(connectionId, "ERROR\nreceipt-id: " + recieptID + "\nmessage: " + msg + "\n\n");
         }
-        ConnectionHandler<String> ch = connections.getConnectionHandler(connectionId);
+        
         connections.disconnect(connectionId);
         if (currentUser != null) {
             currentUser.disconnect();
             currentUser = null;
-        }
-        try {
-            ch.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
     }

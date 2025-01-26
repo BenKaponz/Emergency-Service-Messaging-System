@@ -424,6 +424,7 @@ void StompProtocol::serverThreadLoop() {
                     int receiptId = extractReceiptId(responseFromServer);
                     if (receiptId == disconnectReceipt) {
                         disconnect();
+                        cout << "Logged out successfully" << endl;
                     } else {
                         lock_guard<mutex> lock(recieptIDtoActionMutex);
                         if (recieptIDtoAction.find(receiptId) != recieptIDtoAction.end()) {
@@ -432,6 +433,7 @@ void StompProtocol::serverThreadLoop() {
                     }
                 } else if (command == "ERROR") {
                     cout << "Error recieved from server:" << endl;
+                    cout << responseFromServer << endl;
                     disconnect();
                 } else if (command == "MESSAGE") {
                     Event event = createEvent(responseFromServer);
@@ -481,7 +483,6 @@ void StompProtocol::disconnect() {
     channelToSubscriptionId.clear();
     summarizeMap.clear();
     
-    cout << "Logged out successfully." << endl;
 }
 
 Event StompProtocol::createEvent(const string &frame) {
