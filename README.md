@@ -5,11 +5,13 @@ The system enables users to connect, subscribe to topics, send and receive messa
 
 ## 🔧 Technologies Used
 
-- **C++** — Client-side implementation
-- **Java** — Server-side implementation (supporting both TPC and Reactor architectures)
-- **STOMP Protocol** — For structured messaging
-- **Git** — Version control (bonus points received)
-
+-	**Java** (Server side)
+-	**C++** (Client side)
+-	STOMP Protocol over TCP
+-	Multithreading, Reactor Pattern
+-	Linux Sockets
+- Git, Makefile
+  
 ## 💡 Project Structure
 
 - **Client (C++)**  
