@@ -75,15 +75,14 @@ make
 
 ## 🎓 Course Information
 
-- **Course**: SPL251 - Advanced Systems Programming
+- **Course**: SPL - Systems Programming
 - **Institution**: Ben-Gurion University of the Negev
 - **Year**: 2025
-- **Grade**: [Add here once graded]
 
 ## 🧑‍💻 Authors
 
 - **Ben Kapon**  
-  Student at BGU | System-level & backend development enthusiast  
+  Student at BGU 
   [LinkedIn](https://www.linkedin.com/in/ben-kapon-523882331)
 
 - **Itay Shaul**  
