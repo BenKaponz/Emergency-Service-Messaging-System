@@ -6,11 +6,13 @@ The system enables users to connect, subscribe to topics, send and receive messa
 ## 🔧 Technologies Used
 
 -	**Java** (Server side)
--	**C++** (Client side)
+-	**C++** (Client side, socket programming)
 -	STOMP Protocol over TCP
+-	JSON-based message structure
 -	Multithreading, Reactor Pattern
 -	Linux Sockets
-- Git, Makefile
+- Git for version control
+- Docker-compatible
   
 ## 💡 Project Structure
 
@@ -55,6 +57,14 @@ The system enables users to connect, subscribe to topics, send and receive messa
 - **Course**: SPL - Systems Programming
 - **Institution**: Ben-Gurion University of the Negev
 - **Year**: 2025
+- **Project Grade**: 100
+
+## How to Build
+
+1. Navigate to `client/` and compile the C++ client using `make`.
+2. Navigate to `server/` and run the Java server using your preferred build system (e.g., IntelliJ, Maven).
+3. Communication follows the STOMP protocol using TCP sockets.
+   
 
 ## 🧑‍💻 Authors
 
@@ -65,3 +75,7 @@ The system enables users to connect, subscribe to topics, send and receive messa
 - **Itay Shaul**  
   Student at BGU
   [LinkedIn](https://www.linkedin.com/in/itay-shaul/)
+
+
+  **This project was designed and tested on a Docker-compatible environment.**
+
