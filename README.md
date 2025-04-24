@@ -34,7 +34,8 @@ The system enables users to connect, subscribe to topics, send and receive messa
 - Graceful disconnection & logout.
 - Custom event summary generation.
 
-  ## How to Run
+
+## How to Run
 
 ### Server
 
