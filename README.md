@@ -102,6 +102,7 @@ logout
 - **Institution**: Ben-Gurion University of the Negev
 - **Year**: 2025
 - **Project Grade**: 100
+- **Environment:** Linux CS Lab, Docker-compatible  
 
 ## How to Build
 
@@ -112,13 +113,13 @@ logout
 
 ## 🧑‍💻 Authors
 
-- **Ben Kapon**  
-  Student at BGU
-  [LinkedIn](https://www.linkedin.com/in/ben-kapon-523882331)
+**Ben Kapon**  
+Student at BGU  
+[LinkedIn](https://www.linkedin.com/in/your-ben-kapon-link)
 
-- **Itay Shaul**  
-  Student at BGU
-  [LinkedIn](https://www.linkedin.com/in/itay-shaul/)
+**Itay Shaul**  
+Student at BGU  
+[LinkedIn](https://www.linkedin.com/in/your-itay-shaul-link)
 
 ## Important note
   **This project was designed and tested on a Docker-compatible environment.**
