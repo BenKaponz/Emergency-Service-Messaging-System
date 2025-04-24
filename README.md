@@ -34,6 +34,61 @@ The system enables users to connect, subscribe to topics, send and receive messa
 - Graceful disconnection & logout.
 - Custom event summary generation.
 
+  ## How to Run
+
+### Server
+
+Navigate to the `server/` directory and run:
+
+```bash
+mvn clean compile
+mvn exec:java -Dexec.mainClass="bgu.spl.net.impl.stomp.StompServer" -Dexec.args="7777 tpc"
+# or for reactor:
+mvn exec:java -Dexec.mainClass="bgu.spl.net.impl.stomp.StompServer" -Dexec.args="7777 reactor"
+```
+
+### Client
+
+From the `client/` directory:
+
+```bash
+make
+cd bin
+./StompEMIClient
+```
+
+### Example Run
+
+Each client should be started in a separate terminal.
+
+#### Terminal 1 - Alice
+
+```bash
+login 127.0.0.1:7777 Alice 123
+join police
+```
+
+#### Terminal 2 - Bob
+
+```bash
+login 127.0.0.1:7777 Bob abc
+join police
+report {PATH TO events1.json}
+```
+
+#### Terminal 1 - Alice again
+
+```bash
+summary police Bob {PATH TO OUTPUT FILE (e.g. events1_out.txt)}
+logout
+```
+
+#### Terminal 2 - Bob
+
+```bash
+logout
+```
+
 ## 🧪 Tests & Debugging
 
 - All features were manually tested with simulated users.
