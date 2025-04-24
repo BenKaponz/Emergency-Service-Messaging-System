@@ -119,6 +119,6 @@ logout
   Student at BGU
   [LinkedIn](https://www.linkedin.com/in/itay-shaul/)
 
-
+## Important note
   **This project was designed and tested on a Docker-compatible environment.**
 
