@@ -34,18 +34,6 @@ The system enables users to connect, subscribe to topics, send and receive messa
 - Graceful disconnection & logout.
 - Custom event summary generation.
 
-## 📁 Folder Structure
-
-```
-.
-├── Client/             # C++ Client code
-├── Server/             # Java Server code
-├── include/            # Shared headers
-├── README.md
-├── Makefile
-└── ...
-```
-
 ## 🧪 Tests & Debugging
 
 - All features were manually tested with simulated users.
