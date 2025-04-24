@@ -82,9 +82,9 @@ make
 ## 🧑‍💻 Authors
 
 - **Ben Kapon**  
-  Student at BGU 
+  Student at BGU
   [LinkedIn](https://www.linkedin.com/in/ben-kapon-523882331)
 
 - **Itay Shaul**  
-  Student at BGU  
+  Student at BGU
   [LinkedIn](https://www.linkedin.com/in/itay-shaul/)
