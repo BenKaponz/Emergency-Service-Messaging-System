@@ -32,31 +32,6 @@ The system enables users to connect, subscribe to topics, send and receive messa
 - Graceful disconnection & logout.
 - Custom event summary generation.
 
-## 🗃️ Sample Workflow
-
-```bash
-> login host:port username password
-> join team-a
-> send /event team-a {"general_description":"fire", "location":"Building A"}
-> logout
-```
-
-## 🚀 How to Run
-
-### Server (Java)
-```bash
-cd Server
-mvn package
-java -jar target/Server.jar tpc 7777
-```
-
-### Client (C++)
-```bash
-cd Client
-make
-./client
-```
-
 ## 📁 Folder Structure
 
 ```
