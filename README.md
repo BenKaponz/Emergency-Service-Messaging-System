@@ -24,6 +24,29 @@ The system enables users to connect, subscribe to topics, send and receive messa
   - Based on `bgu.spl.net.srv.Server`.
   - Supports two threading models: **Thread Per Client (TPC)** and **Reactor** using Java NIO.
   - Manages client sessions, topic subscriptions, and frame routing.
+    
+- **Root directory**
+- `events1.json` – Sample input file
+- `events1_out.txt` – Output summary file
+- `.devcontainer/` – Development environment configuration
+
+ ```
+.
+├── client/
+│   ├── bin/
+│   ├── data/
+│   ├── include/
+│   ├── src/
+│   └── makefile
+├── server/
+│   └── src/main/java/bgu/spl/net/
+│   └── pom.xml
+├── events1.json
+├── events1_out.txt
+├── README.md
+```
+
+---
 
 ## ✨ Features
 
@@ -90,6 +113,55 @@ logout
 logout
 ```
 
+## 🖥️ Client Command Reference
+
+| Command                                | Description |
+|----------------------------------------|-------------|
+| `login <host>:<port> <user> <pass>`   | Connects to the server and authenticates the client. |
+| `join <topic>`                        | Subscribes to a topic (e.g., police, fire, etc.). |
+| `exit <topic>`                        | Unsubscribes from a topic. |
+| `report <path>`                       | Sends events to the server from a JSON file. |
+| `summary <topic> <user> <path>`       | Requests a summary of all events reported by a user on a topic. Output saved to path. |
+| `logout`                              | Gracefully disconnects the client from the server. |
+
+---
+
+## 📊 Event File Format
+Event report files should be in JSON format with the following structure:
+
+```json
+{
+  "channel_name": "<topic_name>",
+  "events": [
+    {
+      "event_name": "<string>",
+      "city": "<string>",
+      "date_time": <unix_timestamp>,
+      "description": "<string>",
+      "general_information": {
+        "active": <boolean>,
+        "forces_arrival_at_scene": <boolean>
+      }
+    },
+    ...
+  ]
+}
+```
+
+- `channel_name` defines the topic to which the events will be published.
+- Each event includes metadata such as name, location, and time.
+- The `date_time` field should be a UNIX timestamp (in seconds).
+- `general_information.active` indicates whether the event is ongoing.
+- `general_information.forces_arrival_at_scene` indicates whether emergency forces arrived at the scene.
+
+You may include multiple events in the `events` array, as shown above.
+
+> Example files can be found under the project root, such as `events1.json`.
+Multiple such events can be sent as a JSON array.
+
+---
+
+
 ## 🧪 Tests & Debugging
 
 - All features were manually tested with simulated users.
@@ -103,12 +175,6 @@ logout
 - **Year**: 2025
 - **Project Grade**: 100
 - **Environment:** Linux CS Lab, Docker-compatible  
-
-## How to Build
-
-1. Navigate to `client/` and compile the C++ client using `make`.
-2. Navigate to `server/` and run the Java server using your preferred build system (e.g., IntelliJ, Maven).
-3. Communication follows the STOMP protocol using TCP sockets.
    
 
 ## 🧑‍💻 Authors
@@ -121,6 +187,8 @@ Student at BGU
 Student at BGU  
 [LinkedIn](https://www.linkedin.com/in/itay-shaul/)
 
-## Important note
-  **This project was designed and tested on a Docker-compatible environment.**
+## 📝 Important Note
+This project was designed and tested on a **Docker-compatible environment**.  
+Ensure file paths and JSON formats are valid when running locally or in CI environments.
+  > This project demonstrates a real-time messaging architecture using both low-level socket programming in C++ and scalable Java server design.
 
