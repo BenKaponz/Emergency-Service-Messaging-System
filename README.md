@@ -1,6 +1,6 @@
 # 🚨 Emergency Service Messaging System
 
-A cross-platform emergency event messaging system implemented as part of the *SPL251 - Advanced Systems Programming* course at Ben-Gurion University.  
+A cross-platform emergency event messaging system implemented as part of the *SPL - Systems Programming* course at Ben-Gurion University.  
 The system enables users to connect, subscribe to topics, send and receive messages, and manage state in real-time using the STOMP protocol.
 
 ## 🔧 Technologies Used
