@@ -173,7 +173,6 @@ Multiple such events can be sent as a JSON array.
 - **Course**: SPL - Systems Programming
 - **Institution**: Ben-Gurion University of the Negev
 - **Year**: 2025
-- **Project Grade**: 100
 - **Environment:** Linux CS Lab, Docker-compatible  
    
 
